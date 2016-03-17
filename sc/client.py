@@ -11,9 +11,10 @@ state change.
 
 import docker
 import glob
+import json
+import re
 import os
 import scMetadata
-import re
 import tempfile
 import tarfile
 
@@ -217,3 +218,44 @@ class scClient(docker.Client):
         super(scClient, self).remove_container(ContainerID)
         newImageID = str(newImage['Id'])
         return newImageID
+
+    def get_label_image(self, imageID):
+        """Get Smart Container Metadata Label from image.
+
+        Args:
+            imageID: Id for image that label is requested
+
+        Returns:
+            metadata: Label String in JSON-LD
+
+        """
+        # Look for the smart container label, if it exists return none
+        myInspect = super(scClient, self).inspect_image(imageID)
+        labels = myInspect['ContainerConfig']['Labels']
+        if labels is not None:
+            # print json.dumps(labels, ensure_ascii=False, sort_keys=True, indent=4,
+            #                 separators=(',', ':')).encode('utf8')
+            return json.dumps(labels)
+        return None
+
+    def get_label_container(self, containerID):
+        """Get Smart Container Metadata Label from a container.
+
+        Args:
+            containerID (TODO): Container ID
+        Returns:
+            metadata: Label String in JSON-LD
+
+        """
+        pass
+
+    def build(self, *args, **kwargs):
+        """TODO: Docstring for build.
+
+        Args:
+            1 (TODO): TODO
+
+        Returns: TODO
+
+        """
+        super(scClient, self).build(*args, **kwargs)
