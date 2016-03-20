@@ -151,12 +151,6 @@ class DockerCli:
             raise DockerNotFoundError("Docker Client cannot find server.")
         # TODO: test for dcli to make sure it can talk to client.
 
-    def get_location(self):
-        """Get path to docker executable.
-        
-        """
-        return self.location
-
     def sanity_check(self):
         """sanity_check checks existence and executability of docker."""
         if self.location is None:
@@ -166,7 +160,16 @@ class DockerCli:
 
     def check_docker_version(self, min_version=min_docker_version):
         """check_docker_version makes sure docker is of a min version."""
-        output = get_stdout('docker --version')
+        # output = get_stdout('docker --version')
+        try:
+            res = subprocess.Popen([self.location, '--version'],
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+            output, error = res.communicate()
+        except OSError as e:
+            print "OSError > ", e.errno
+            print "OSError > ", e.strerror
+            print "OSError > ", e.filename
         # in docker 1.7.1 version is at 2 position in returned string
         version = output.split()[2]
         # remove comma from out put if in string

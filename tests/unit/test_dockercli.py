@@ -31,12 +31,12 @@ def test_DockerCli():
     dockertester3 = dockercli.DockerCli()
     assert dockertester3.location is not None
 
-# def test_docker_version():
-#     from sc import dockercli
-#    with pytest.raises(dockercli.DockerInsuficientVersionError):
-#        # This will fail if docker ever gets to version 100
-#        dockertester = dockercli.DockerCli()
-#        dockertester.check_docker_version("100.100.100")
+def test_docker_version():
+    from sc import dockercli
+    with pytest.raises(dockercli.DockerInsuficientVersionError):
+        # This will fail if docker ever gets to version 100
+        dockertester = dockercli.DockerCli()
+        dockertester.check_docker_version("100.100.100")
 
 # def test_check_docker_connection():
 #    from sc import dockercli
