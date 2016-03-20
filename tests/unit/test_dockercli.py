@@ -34,11 +34,11 @@ def test_DockerCli():
     if _platform == "darwin":
         with pytest.raises(dockercli.DockerNotFoundError):
             os.environ.clear()
-            dockertester = dockercli.DockerCli()
+            dockercli.DockerCli()
         os.environ.update(oldenv)
-        dockertester.check_docker_connection()
+        # dockertester.check_docker_connection()
     if _platform == "linux":
-        dockertester = dockercli.DockerCli()
+        dockercli.DockerCli()
     dockertester3 = dockercli.DockerCli()
     assert dockertester3.location is not None
 
