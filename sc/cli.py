@@ -68,10 +68,12 @@ def search(image):
 
 
 @cli.command()
-@click.argument('printLabel')
-def print_md():
+@click.argument('image')
+def printlabel(image):
     """Print Metadata label from container."""
-    pass
+    processdocker = DockerCli("info") 
+    this_label = processdocker.get_label(image)
+    print this_label
 
 
 @cli.command()
@@ -89,6 +91,13 @@ def preserve():
     """Preserve workflow to container using umbrella."""
     pass
 
+@cli.command()
+@click.argument('image')
+def infect(image):
+    """Provenance should be contagious. Create smartcontainer image from
+    existing image. """
+    processdocker = DockerCli("info")
+    processdocker.infect('image')
 
 #  Orcid Commands  ################################
 #  cwilli34
