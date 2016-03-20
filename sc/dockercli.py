@@ -10,7 +10,6 @@ to be processed for provenance.
 """
 from __future__ import unicode_literals
 from util import which
-import io
 import os
 import os.path
 import requests
@@ -223,69 +222,87 @@ class DockerCli:
                 "Please  make sure docker is greater than %s" % min_version)
 
     def do_command(self, command):
-        """do_command is main entry point for capturing docker commands"""
+        """do_command: main entry point for capturing docker commands.
+
+        Commands that don't require provenance capture and annotation are
+        passed verbatim to the docker client command line utility. All other
+        commands are parsed and passed to the scClient docker-py client which
+        executes the equivalent docker command line and and processes the
+        provenance metadata.
+
+        Args:
+            command (str): Docker command line string.
+
+        """
         # First run the command and capture the output.
         # For efficiency this should probably change such that
         # if a command doesn't have a capture handler we execute
         # the command uncaptured. Most commands are going to be captured
         # for provenance, so this efficiency concern is probably moot.
 
-        if self.location is None:
-            self.find_docker()
-        cmd_string = str(self.location) + ' ' + self.command
+        cmd_string = str(self.location) + ' ' + command
         capture_flag = False
 
         for name in snarf_docker_commands:
-            if name in self.command:
+            if name in command:
                 if name == 'build':
-                    self.capture_cmd_build(cmd_string) #Captures information from logs.
+                    # self.capture_cmd_build(cmd_string)
                     capture_flag = True
                 elif name == 'commit':
                     self.capture_cmd_commit(cmd_string)
                     capture_flag = True
                 elif name == 'run':
-                    #Execute some procedure
+                    # Execute some procedure
                     capture_flag = True
                 elif name == 'stop':
-                    #Execute some procedure
+                    # Execute some procedure
                     capture_flag = True
         if not capture_flag:
-            #print 'here'
             subprocess.call(cmd_string, shell=True)
 
+    def capture_cmd_commit(self, cmd_string):
+        """TODO: Docstring for capture_cmd_commit.
 
-    def get_docker_version(self):
-        docker_version = None
-        docker_command = str(self.location) + " version --format '{{.Server.Version}}'"
-        output = capture_stdout(docker_command)
-        for line in io.TextIOWrapper(output.stdout):
-            docker_version = line
-        return docker_version
+        Args:
+            cmd_string (TODO): TODO
 
-    def get_image_info(self):
-        docker_command = str(self.location) + ' images'
-        output = capture_stdout(docker_command)
-        if self.imageID is not None:
-            for line in io.TextIOWrapper(output.stdout):
-                if self.imageID in repr(line):
-                    repository = line.split()[0]
-                    tag = line.split()[1]
-            return repository, tag
-        else:
-            raise DockerImageError
+        Returns: TODO
 
+        """
+        print cmd_string
+        pass
 
-    # Function to compare sematic versioning
-    # See http://zxq9.com/archives/797 for explaination
-    # and http://semver.org/ for information on semantic versioning
     def ver_tuple(self, z):
+        """ver_tuple: Version Tuple.
+
+        Versioning tuple parser for semantic versioning.
+        Note:
+            See http://zxq9.com/archives/797 for explaination.
+            See http://semver.org/ for info on semantic versioning.
+        Args:
+            z (str): String containing semantic version.
+        Returns:
+            tuple: Tuple of the form Major, Minor and Patch.
+
+        """
         return tuple([int(x) for x in z.split('.') if x.isdigit()])
 
     def ver_cmp(self, a, b):
+        """ver_cmp: Semantic Version Comparison.
+
+        Compares two tuples containing semantic version of the form
+        Major, Minor and Patch.
+
+        Args:
+            a,b (str): Strings containing semantic versions to be compared.
+        Returns:
+            cmp: Result of python builtin cmp function.
+                 Returns -1 if x < y, returns 0 if x == y and 1 if x > y
+        """
         return cmp(self.ver_tuple(a), self.ver_tuple(b))
 
     def infect(self, image):
-        """
+        """infect: Infect docker image with Provenance.
 
         Args:
             image (TODO): ImageID

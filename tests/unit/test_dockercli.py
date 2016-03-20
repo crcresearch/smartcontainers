@@ -59,50 +59,33 @@ def test_docker_version():
         dockertester.check_docker_version("100.100.100")
 
 
-# Test all sanity checks to make sure docker is there.
-# def test_sanity():
-#    from sc import dockercli
-#    dockertester = dockercli.DockerCli('help')
-#    dockertester.sanity_check()
-
 # This test should pass through since we don't capture the
 # provenance of help.
-# def test_do_command_simple():
-#    from sc import dockercli
-#    dockertester = dockercli.DockerCli('--help')
-#    dockertester.do_command()
+def test_do_command_simple():
+    """Test simple docker command to pass through."""
+    from sc import dockercli
+    dockertester = dockercli.DockerCli()
+    dockertester.do_command('--help')
+
+
+def test_do_command_commit(createClient, pull_docker_image):
+    """TODO: Docstring for test_do_command_commit.
+
+    Returns: TODO
+
+    """
+    from sc import dockercli
+    dockertester = dockercli.DockerCli()
+    newContainer = createClient.create_container(image=pull_docker_image,
+                                                 command="/bin/sh", tty=True)
+    ContainerID = str(newContainer['Id'])
+    createClient.start(ContainerID)
+    cmd_str = 'commit ' + ContainerID
+    dockertester.do_command(cmd_str)
+    createClient.stop(ContainerID)
+    createClient.remove_container(ContainerID)
 
 # def test_do_command_run():
 #    from sc import dockercli
 #    dockertester = dockercli.DockerCli('run /usr/bin/uname')
 #    dockertester.do_command()
-
-# Tests function that returns the current image id for
-# "phusion/baseimage"
-# def test_get_imageID(pull_docker_image):
-#    from sc import dockercli
-#    dockertester = dockercli.DockerCli('images')
-#    imageID = dockertester.get_imageID(pull_docker_image)
-#    # assert imageID == "e9f50c1887ea"
-
-# def test_put_label_image(pull_docker_image):
-#    from sc import dockercli
-#    dockertester = dockercli.DockerCli('images')
-#    imageID = dockertester.get_imageID(pull_docker_image)
-#    dockertester.set_image(imageID)
-#    label = '{"Description":"A containerized foobar","Usage":"docker run --rm example/foobar [args]","License":"GPL","Version":"0.0.1-beta","aBoolean":true,"aNumber":0.01234,"aNestedArray":["a","b","c"]}'
-#    dockertester.put_label_image(label)
-
-# def test_docker_get_metadata(pull_docker_image):
-#    from sc import dockercli
-#    dockertester = dockercli.DockerCli('images')
-#    imageID = dockertester.get_imageID(pull_docker_image)
-#    dockertester.set_image(imageID)
-#    label = dockertester.get_metadata()
-
-# def test_docker_get_label(pull_docker_image):
-#    from sc import dockercli
-#    dockertester = dockercli.DockerCli('images')
-#    imageID = dockertester.get_imageID(pull_docker_image)
-#    dockertester.set_image(imageID)
-#    #label = dockertester.get_label(imageID)
