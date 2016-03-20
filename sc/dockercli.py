@@ -13,7 +13,7 @@ from util import which
 import io
 import os
 import os.path
-import re
+import requests
 import stat
 import subprocess
 
@@ -31,6 +31,10 @@ snarf_docker_commands = ['commit', 'build', 'stop', 'run']
 smart_container_key = 'sc'
 
 
+class Error(Exception):
+    """Base exception for client module."""
+
+
 class DockerNotFoundError(RuntimeError):
     """Exception raised for missing docker command.
 
@@ -42,6 +46,10 @@ class DockerNotFoundError(RuntimeError):
         """Exception message Docker not Found Error."""
         msg = "Please make sure docker is installed and in your path."
         self.arg = msg
+
+
+class DockerDaemonConnectionError(Error):
+    """Raised if the docker client can't connect to the docker daemon."""
 
 
 class DockerInsuficientVersionError(RuntimeError):
@@ -86,6 +94,14 @@ class DockerCli:
     metadata and provenance processing.
     """
 
+    location = None              #: Path to docker command line.
+    docker_host = None           #: Docker host environment variable.
+    docker_cert_path = None      #: Docker cert path environment variable.
+    docker_machine_name = None   #: Docker machine name env variable.
+    docker_socket_file = None    #: Path to docker socket file.
+    dcli = None                  #: docker-py client object.
+    docker_machine = False       #: Using Docker machine instead of sockets.
+
     def __init__(self):
         """Init has no arguments.
 
@@ -93,13 +109,6 @@ class DockerCli:
         and attempt to setup docker-py to connect to the docker client backend.
         The connection variables will be stored in self.
         """
-        self.location = None              #: Path to docker command line.
-        self.docker_host = None           #: Docker host environment variable.
-        self.docker_cert_path = None      #: Docker cert path environment variable.
-        self.docker_machine_name = None   #: Docker machine name env variable.
-        self.docker_socket_file = None    #: Path to docker socket file.
-        self.dcli = None                  #: docker-py client object.
-
         # Find docker command line location
         location = which("docker")
         if location is None:
@@ -113,20 +122,20 @@ class DockerCli:
         self.docker_machine_name = os.getenv("DOCKER_MACHINE_NAME")
 
         # Look for linux docker socket file
-        socket_path = "/var/run/docker.socket"
+        socket_path = "/var/run/docker.sock"
         has_docker_socket_file = os.path.exists(socket_path)
         if has_docker_socket_file:
             mode = os.stat(socket_path).st_mode
             isSocket = stat.S_ISSOCK(mode)
             if isSocket:
                 self.docker_socket_file = "unix://" + socket_path
-        # Sanity check docker environment to see that we either have
-        # docker machine env vars or a running docker server with
-        # a socket file.
-        if not ((self.docker_host and self.docker_machine_name and
-                self.docker_cert_path) or not (has_docker_socket_file)):
-            raise DockerNotFoundError("Make docker server is started or env"
-                                      "variables for docker-machine are set.")
+        if not ((self.docker_host and
+                self.docker_cert_path and
+                self.docker_machine_name) or
+                has_docker_socket_file):
+            raise DockerNotFoundError("Couldn't find socket file or"
+                                      "Environment variables for docker.")
+
         # Setup the docker client connections based on what we've found.
         if (self.docker_host and self.docker_machine_name and
                 self.docker_cert_path):
@@ -141,26 +150,60 @@ class DockerCli:
             docker_host_https = self.docker_host.replace("tcp", "https")
             self.dcli = client.scClient(base_url=docker_host_https,
                                         tls=tls_config, version="auto")
+            self.docker_machine = True
         # #print self.dcli.info()
         elif (self.docker_socket_file):
             self.dcli = client.scClient(base_url=self.docker_socket_file,
                                         version="auto")
 
         # Assert dcli is not none;
-        if self.dcli is not None:
+        if self.dcli is None:
             raise DockerNotFoundError("Docker Client cannot find server.")
-        # TODO: test for dcli to make sure it can talk to client.
+        # Test for dcli to make sure it can talk to client.
+        # self.test_docker_version()
+        # self.test_docker_connection()
 
-    def sanity_check(self):
-        """sanity_check checks existence and executability of docker."""
-        if self.location is None:
-            self.find_docker()
-        self.check_docker_version()
-        self.check_docker_connection()
+    def check_docker_connection(self):
+        """check_docker_connection: Docker connections.
+
+        Checks both the command line docker and docker-py client can
+        communicate with docker server.
+
+        Raises:
+            DockerServerError: Docker cannot connect to server.
+
+        """
+        try:
+            res = subprocess.Popen([self.location, 'images'],
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+            output, error = res.communicate()
+        except OSError as e:
+            print "OSError > ", e.errno
+            print "OSError > ", e.strerror
+            print "OSError > ", e.filename
+        #
+        # This checks if we can get a connection to the remote docker
+        # server. It assumes the output of the "docker images"" command is
+        # of the form: "Get http:///var/run/docker.sock/v1.19/images/json: dial
+        # unix /var/run/docker.sock: no such file or directory. Are you trying
+        # to connect to a TLS-enabled daemon without TLS?"
+        if 'IMAGE ID' not in output:
+            raise DockerDaemonConnectionError("Docker cannot connect to daemon")
+
+        # Check dcli can connect to server.
+        try:
+            self.dcli.ping()
+        except requests.exceptions.ConnectionError:
+            raise DockerDaemonConnectionError(
+                'Couldn\'t connect to the docker daemon using the specified '
+                'environment variables. Please check the environment variables '
+                'DOCKER_HOST, DOCKER_CERT_PATH and DOCKER_TLS_VERIFY are set '
+                'correctly. If you are using boot2docker, make sure you have run '
+                '"$(docker-machine env)"')
 
     def check_docker_version(self, min_version=min_docker_version):
-        """check_docker_version makes sure docker is of a min version."""
-        # output = get_stdout('docker --version')
+        """check_docker_version: makes sure docker is of a min version."""
         try:
             res = subprocess.Popen([self.location, '--version'],
                                    stdout=subprocess.PIPE,
@@ -178,16 +221,6 @@ class DockerCli:
         if self.ver_cmp(version, min_version) < 0:
             raise DockerInsuficientVersionError(
                 "Please  make sure docker is greater than %s" % min_version)
-
-    def check_docker_connection(self):
-        output = get_stdout('docker images')
-        # This checks if we can get a connection to the remote docker
-        # server. It assumes the output of the "docker images"" command is
-        # of the form: "Get http:///var/run/docker.sock/v1.19/images/json: dial
-        # unix /var/run/docker.sock: no such file or directory. Are you trying
-        # to connect to a TLS-enabled daemon without TLS?"
-        if 'IMAGE ID' not in output:
-            raise DockerServerError("Docker cannot connect to daemon")
 
     def do_command(self, command):
         """do_command is main entry point for capturing docker commands"""
@@ -220,18 +253,6 @@ class DockerCli:
             #print 'here'
             subprocess.call(cmd_string, shell=True)
 
-    def capture_command(self):
-        pass
-
-    def capture_cmd_build(self,cmd_string):
-        output = capture_stdout(cmd_string)
-        #print output.stdout
-        #print 'build'
-        #pass
-
-    def capture_cmd_commit(self, cmd_string):
-        pass
-
 
     def get_docker_version(self):
         docker_version = None
@@ -253,54 +274,6 @@ class DockerCli:
         else:
             raise DockerImageError
 
-
-
-# Each image has a metadata record. This returns a list of all label
-# strings contained in the metadata.
-    def get_metadata(self):
-        docker_command = str(self.location) + ' inspect ' + self.imageID
-        p = Command(docker_command, stdout=Capture(buffer_size=-1))
-        p.run()
-        # Testing directly in the string works if the output is only
-        # one line.
-        # if 'No such image' in p.stdout:
-        # raise DockerImageError
-        # data = [json.loads(str(item)) for item in p.stdout.readline().strip().split('\n')]
-        json_block = []
-        line = p.stdout.readline()
-        while (line):
-            if 'no such image' in line:
-                raise DockerImageError
-            # Stupid sarge appears to add a blank line between
-            # json statements. This checks for a blank line and
-            # cycles to the next line if it is blank.
-            if re.match(r'^\s*$', line):
-                line = p.stdout.readline()
-                continue
-            json_block.append(line)
-            line = p.stdout.readline()
-        s = ''.join(json_block)
-        s = s[1:-2]
-        self.metadata = s
-
-
-    def set_image(self, image):
-        """set_image
-            sets docker image id to docker object.
-            :param image: image id
-            """
-        self.imageID = image
-
-
-    def set_command(self, command):
-        """set_command
-            sets the docker command to docker object
-            :param command: docker command
-            """
-        if len(command) > 0:
-            self.command = command
-        else:
-            raise DockerInputError("Invalid Command")
 
     # Function to compare sematic versioning
     # See http://zxq9.com/archives/797 for explaination

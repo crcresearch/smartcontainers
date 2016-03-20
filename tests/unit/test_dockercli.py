@@ -1,14 +1,26 @@
+
+# -*- coding: utf-8 -*-
+"""Tests for Docker Command Line Interface Module.
+
+This module provides the interface to the docker command line utility. Commands
+that need to be processed by smartcontainers are intercepted and sent to
+docker-py client API for processing. All other commands are sent to the docker
+command line client. This is a cheat to avoid having to reimpliment the entire
+docker command line arguments even though only a subset of these commands need
+to be processed for provenance.
+"""
 import pytest
 import os
 from sys import platform as _platform
+
 
 # Test code that discovers docker command
 # This is a bad hack right now
 # The correct way should be monkeypatch fixtures
 # http://holgerkrekel.net/2009/03/03/monkeypatching-in-unit-tests-done-right/
 def test_DockerCli():
+    """Test DockerCli docker initializetion."""
     from sc import dockercli
-   
 
     oldenv = os.environ.copy()
     # Test location first
@@ -16,11 +28,10 @@ def test_DockerCli():
     with pytest.raises(dockercli.DockerNotFoundError):
         # check that exceptions are being raised.
         os.environ["PATH"] = "NULL"
-        dockertester2 = dockercli.DockerCli()
+        dockercli.DockerCli()
     os.environ["PATH"] = oldpath
     # Test environment variables on MacOS
     if _platform == "darwin":
-        docker_host = os.environ["DOCKER_HOST"]
         with pytest.raises(dockercli.DockerNotFoundError):
             os.environ.clear()
             dockertester = dockercli.DockerCli()
@@ -31,25 +42,22 @@ def test_DockerCli():
     dockertester3 = dockercli.DockerCli()
     assert dockertester3.location is not None
 
+
+def test_check_docker_connection():
+    """Test that docker returns something useful."""
+    from sc import dockercli
+    dockertester = dockercli.DockerCli()
+    dockertester.check_docker_connection()
+
+
 def test_docker_version():
+    """Test docker version tester works for an incorrect version."""
     from sc import dockercli
     with pytest.raises(dockercli.DockerInsuficientVersionError):
         # This will fail if docker ever gets to version 100
         dockertester = dockercli.DockerCli()
         dockertester.check_docker_version("100.100.100")
 
-# def test_check_docker_connection():
-#    from sc import dockercli
-#    dockertester = dockercli.DockerCli()
-#    if _platform == "darwin":
-#        docker_host = os.environ["DOCKER_HOST"]
-#        with pytest.raises(dockercli.DockerServerError):
-#            os.environ["DOCKER_HOST"] = "tcp://127.0.0.1:1000"
-#            dockertester.check_docker_connection()
-#        os.environ["DOCKER_HOST"] = docker_host
-#        dockertester.check_docker_connection()
-#    else:
-#        dockertester.check_docker_connection()
 
 # Test all sanity checks to make sure docker is there.
 # def test_sanity():
