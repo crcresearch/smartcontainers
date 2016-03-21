@@ -111,3 +111,14 @@ def test_infect_image(createClient, pull_docker_image):
 def test_infect_container(createClient, pull_docker_image):
     """TODO: Create new Smartcontainer from container ID."""
     pass
+
+
+def test_get_label_image(createClient, pull_docker_image):
+    """Get JSON label from imageID."""
+    imageID = str(createClient.inspect_image(pull_docker_image)['Id'])
+    imageID = imageID.replace('sha256:', '')
+    sc_image = createClient.infect_image(image=imageID)
+    json_str = createClient.get_label_image(imageID=sc_image)
+    assert 'smartcontainer' in str(json_str)
+    # print json_str
+    createClient.remove_image(sc_image)
