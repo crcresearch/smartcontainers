@@ -1,5 +1,7 @@
+import pytest
 from pytest_bdd import given, scenario, then, when
 
+@pytest.mark.skip(reason="Currently not implemented")
 @scenario('../docker_build.feature', 'Dockerfile is found')
 def test_dockerfile_is_found():
     pass

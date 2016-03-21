@@ -1,5 +1,7 @@
+import pytest
 from pytest_bdd import given, scenario, then, when
 
+@pytest.mark.skip(reason="Currently not implemented")
 @scenario('../docker_build.feature', 'Dockerfile contains a maintainer')
 def test_dockerfile_contains_a_maintainer():
     pass
