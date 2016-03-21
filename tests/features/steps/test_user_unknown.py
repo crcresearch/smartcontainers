@@ -1,5 +1,7 @@
+import pytest
 from pytest_bdd import given, scenario, then, when
 
+@pytest.mark.skip(reason="Currently not implemented")
 @scenario('../user.feature', 'An unknown user starts Smart Containers')
 def test_an_unknown_user_starts_smart_containers():
     """An unknown user starts Smart Containers."""
