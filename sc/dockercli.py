@@ -10,20 +10,15 @@ to be processed for provenance.
 """
 from __future__ import unicode_literals
 from util import which
-import io
-import json
 import os
 import os.path
-import re
+import requests
 import stat
 import subprocess
 
 import docker.tls as tls
-from sarge import Command, Capture, get_stdout, get_stderr, capture_stdout
 
 import client
-import provinator
-import scMetadata
 
 # We need to docker version greater than 1.6.0 to support
 # the label functionality.
@@ -36,10 +31,7 @@ smart_container_key = 'sc'
 
 
 class Error(Exception):
-    
-    """Base class for docker module exceptions."""
-    
-    pass
+    """Base exception for client module."""
 
 
 class DockerNotFoundError(RuntimeError):
@@ -50,117 +42,176 @@ class DockerNotFoundError(RuntimeError):
     """
 
     def __init__(self, msg):
+        """Exception message Docker not Found Error."""
         msg = "Please make sure docker is installed and in your path."
         self.arg = msg
 
 
+class DockerDaemonConnectionError(Error):
+    """Raised if the docker client can't connect to the docker daemon."""
+
+
 class DockerInsuficientVersionError(RuntimeError):
-    """Exception raised for wrong version of docker command."""
+    """Exception raised for wrong version of docker command.
+
+    We require a minimimum version of the docker command line interface
+    that supports labels as run time arguments.
+
+    """
 
     def __init__(self, msg):
+        """Exception for incompatable docker command line version."""
         msg = "Please make sure docker is greater than %s" % min_docker_version
         self.arg = msg
 
 
 class DockerServerError(RuntimeError):
+    """Exception for no docker server connection.
+
+    This exception can be raised for ether the command line client not
+    conncting to server backend or for the docker-py not able to find
+    either a docker socket file or the envrionment variables for
+    docker-machine.
+
+    """
+
     def __init__(self, msg):
+        """Set exception message for no server connection.
+
+        Args:
+            msg (str): Message for paticular server error.
+        """
         msg = "Cannot connect to server"
         self.arg = msg
 
 
-class DockerImageError(RuntimeError):
-    def __init__(self, msg):
-        msg = "No docker image specified or found."
-        self.arg = msg
-
-class DockerInputError(RuntimeError):
-    def __init__(self, msg):
-        msg = "Invalid input identified"
-        self.arg = msg
-
 class DockerCli:
-    """Docker Command Line interface class"""
-    def __init__(self, command):
-        self.command = command
-        self.label_prefix = "smartcontainer"
-        self.location = None
-        self.imageID = None
-        self.container = None
-        self.metadata = {}
-        self.smartcontainer = {}
-        self.provfilepath = "/SmartContainer/"
-        self.provfilename = "SCProv.jsonld"
-        self.scmd = scMetadata.scMetadata()
-        self.docker_host = None
-        self.docker_cert_path = None
-        self.docker_machine_name = None
-        self.docker_socket_file = None
+    """Docker Command Line interface class.
 
-        # Find docker configuration.
-        self.find_docker()
+    This class provides a wrapper for directing docker commands to either the docker
+    command line client or to the smart containers docker-py client wrapper for
+    metadata and provenance processing.
+    """
 
-        if (self.docker_host and self.docker_machine_name and self.docker_cert_path):
-            tls_config = tls.TLSConfig(
-                client_cert=(os.path.join(self.docker_cert_path, 'cert.pem'),
-                             os.path.join(self.docker_cert_path,'key.pem')),
-                ca_cert=os.path.join(self.docker_cert_path, 'ca.pem'),
-                verify=True,
-                assert_hostname = False
-            )
-        # # Replace tcp: with https: in docker host.
-            docker_host_https = self.docker_host.replace("tcp","https")
-            self.dcli = client.scClient(base_url=docker_host_https,
-                                        tls=tls_config, version="auto")
-        # #print self.dcli.info()
-        elif (self.docker_socket_file):
-            self.dcli = client.scClient(base_url=self.docker_socket_file,
-                                        version="auto")
-        # TODO: test for dcli to make sure it can talk to client.
+    location = None              #: Path to docker command line.
+    docker_host = None           #: Docker host environment variable.
+    docker_cert_path = None      #: Docker cert path environment variable.
+    docker_machine_name = None   #: Docker machine name env variable.
+    docker_socket_file = None    #: Path to docker socket file.
+    dcli = None                  #: docker-py client object.
+    docker_machine = False       #: Using Docker machine instead of sockets.
 
-    def sanity_check(self):
-        """sanity_check checks existence and executability of docker."""
-        if self.location is None:
-            self.find_docker()
-        self.check_docker_version()
-        self.check_docker_connection()
+    def __init__(self):
+        """Init has no arguments.
 
-    def find_docker(self):
-        """find_docker searches paths and common directores to find docker."""
-
+        The __init__ method will attempt to find the docker command line
+        and attempt to setup docker-py to connect to the docker client backend.
+        The connection variables will be stored in self.
+        """
         # Find docker command line location
         location = which("docker")
         if location is None:
             raise DockerNotFoundError("Please make sure docker is installed "
                                       "and in your path")
-        
+        self.location = location
+
         # Find docker-machine environment variables
         self.docker_host = os.getenv("DOCKER_HOST")
         self.docker_cert_path = os.getenv("DOCKER_CERT_PATH")
         self.docker_machine_name = os.getenv("DOCKER_MACHINE_NAME")
 
         # Look for linux docker socket file
-        socket_path = "/var/run/docker.socket"
-        has_docker_socket_file = os.path.exists(socket_path) 
+        socket_path = "/var/run/docker.sock"
+        has_docker_socket_file = os.path.exists(socket_path)
         if has_docker_socket_file:
             mode = os.stat(socket_path).st_mode
             isSocket = stat.S_ISSOCK(mode)
-            if isSocket: 
-                self.docker_socket_file = "unix://"+socket_path
-        # Sanity check docker environment to see that we either have
-        # docker machine env vars or a running docker server with
-        # a socket file. 
-        if not ((self.docker_host and self.docker_machine_name and
-                self.docker_cert_path) or not (has_docker_socket_file)):
-            raise DockerNotFoundError("Make docker server is started or env"
-                                      "variables for docker-machine are set.")
+            if isSocket:
+                self.docker_socket_file = "unix://" + socket_path
+        if not ((self.docker_host and
+                self.docker_cert_path and
+                self.docker_machine_name) or
+                has_docker_socket_file):
+            raise DockerNotFoundError("Couldn't find socket file or"
+                                      "Environment variables for docker.")
 
-        self.location = location
-        return self.location
+        # Setup the docker client connections based on what we've found.
+        if (self.docker_host and self.docker_machine_name and
+                self.docker_cert_path):
+            tls_config = tls.TLSConfig(
+                client_cert=(os.path.join(self.docker_cert_path, 'cert.pem'),
+                             os.path.join(self.docker_cert_path, 'key.pem')),
+                ca_cert=os.path.join(self.docker_cert_path, 'ca.pem'),
+                verify=True,
+                assert_hostname=False
+            )
+        # # Replace tcp: with https: in docker host.
+            docker_host_https = self.docker_host.replace("tcp", "https")
+            self.dcli = client.scClient(base_url=docker_host_https,
+                                        tls=tls_config, version="auto")
+            self.docker_machine = True
+        # #print self.dcli.info()
+        elif (self.docker_socket_file):
+            self.dcli = client.scClient(base_url=self.docker_socket_file,
+                                        version="auto")
 
+        # Assert dcli is not none;
+        if self.dcli is None:
+            raise DockerNotFoundError("Docker Client cannot find server.")
+        # Test for dcli to make sure it can talk to client.
+        # self.test_docker_version()
+        # self.test_docker_connection()
+
+    def check_docker_connection(self):
+        """check_docker_connection: Docker connections.
+
+        Checks both the command line docker and docker-py client can
+        communicate with docker server.
+
+        Raises:
+            DockerServerError: Docker cannot connect to server.
+
+        """
+        try:
+            res = subprocess.Popen([self.location, 'images'],
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+            output, error = res.communicate()
+        except OSError as e:
+            print "OSError > ", e.errno
+            print "OSError > ", e.strerror
+            print "OSError > ", e.filename
+        #
+        # This checks if we can get a connection to the remote docker
+        # server. It assumes the output of the "docker images"" command is
+        # of the form: "Get http:///var/run/docker.sock/v1.19/images/json: dial
+        # unix /var/run/docker.sock: no such file or directory. Are you trying
+        # to connect to a TLS-enabled daemon without TLS?"
+        if 'IMAGE ID' not in output:
+            raise DockerDaemonConnectionError("Docker cannot connect to daemon")
+
+        # Check dcli can connect to server.
+        try:
+            self.dcli.ping()
+        except requests.exceptions.ConnectionError:
+            raise DockerDaemonConnectionError(
+                'Couldn\'t connect to the docker daemon using the specified '
+                'environment variables. Please check the environment variables '
+                'DOCKER_HOST, DOCKER_CERT_PATH and DOCKER_TLS_VERIFY are set '
+                'correctly. If you are using boot2docker, make sure you have run '
+                '"$(docker-machine env)"')
 
     def check_docker_version(self, min_version=min_docker_version):
-        """check_docker_version makes sure docker is of a min version"""
-        output = get_stdout('docker --version')
+        """check_docker_version: makes sure docker is of a min version."""
+        try:
+            res = subprocess.Popen([self.location, '--version'],
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+            output, error = res.communicate()
+        except OSError as e:
+            print "OSError > ", e.errno
+            print "OSError > ", e.strerror
+            print "OSError > ", e.filename
         # in docker 1.7.1 version is at 2 position in returned string
         version = output.split()[2]
         # remove comma from out put if in string
@@ -170,345 +221,93 @@ class DockerCli:
             raise DockerInsuficientVersionError(
                 "Please  make sure docker is greater than %s" % min_version)
 
-    def check_docker_connection(self):
-        output = get_stdout('docker images')
-        # This checks if we can get a connection to the remote docker
-        # server. It assumes the output of the "docker images"" command is
-        # of the form: "Get http:///var/run/docker.sock/v1.19/images/json: dial
-        # unix /var/run/docker.sock: no such file or directory. Are you trying
-        # to connect to a TLS-enabled daemon without TLS?"
-        if 'IMAGE ID' not in output:
-            raise DockerServerError("Docker cannot connect to daemon")
+    def do_command(self, command):
+        """do_command: main entry point for capturing docker commands.
 
-    def do_command(self):
-        """do_command is main entry point for capturing docker commands"""
+        Commands that don't require provenance capture and annotation are
+        passed verbatim to the docker client command line utility. All other
+        commands are parsed and passed to the scClient docker-py client which
+        executes the equivalent docker command line and and processes the
+        provenance metadata.
+
+        Args:
+            command (str): Docker command line string.
+
+        """
         # First run the command and capture the output.
         # For efficiency this should probably change such that
         # if a command doesn't have a capture handler we execute
         # the command uncaptured. Most commands are going to be captured
         # for provenance, so this efficiency concern is probably moot.
 
-        if self.location is None:
-            self.find_docker()
-        cmd_string = str(self.location) + ' ' + self.command
+        cmd_string = str(self.location) + ' ' + command
         capture_flag = False
 
         for name in snarf_docker_commands:
-            if name in self.command:
+            if name in command:
                 if name == 'build':
-                    self.capture_cmd_build(cmd_string) #Captures information from logs.
+                    # self.capture_cmd_build(cmd_string)
                     capture_flag = True
                 elif name == 'commit':
                     self.capture_cmd_commit(cmd_string)
                     capture_flag = True
                 elif name == 'run':
-                    #Execute some procedure
+                    # Execute some procedure
                     capture_flag = True
                 elif name == 'stop':
-                    #Execute some procedure
+                    # Execute some procedure
                     capture_flag = True
         if not capture_flag:
-            #print 'here'
             subprocess.call(cmd_string, shell=True)
 
-    def capture_command(self):
+    def capture_cmd_commit(self, cmd_string):
+        """TODO: Docstring for capture_cmd_commit.
+
+        Args:
+            cmd_string (TODO): TODO
+
+        Returns: TODO
+
+        """
+        print cmd_string
         pass
 
-    def capture_cmd_build(self,cmd_string):
-        output = capture_stdout(cmd_string)
-        #print output.stdout
-        #print 'build'
-        #pass
-
-    def capture_cmd_commit(self,cmd_string):
-        #Initialize variables
-        hasProv = False
-
-        #Parse the command string to get the container id
-        #command = cmd_string.rsplit(' ', 1) [0]
-        container_id = cmd_string.rsplit(' ', -1) [2]
-        new_name_tag = cmd_string.rsplit(' ', -1) [3]
-        if ':' in new_name_tag:
-            new_name = new_name_tag.rsplit(':', -1) [0]
-            new_tag = new_name_tag.rsplit(':', -1) [1]
-        else:
-            new_name = new_name_tag
-            new_tag = ''
-        if self.hasProv(container_id,self.provfilename,self.provfilepath):
-            #Retrieve provenance file from the container
-            self.fileCopyOut(self.location, container_id,self.provfilename, self.provfilepath)
-            #Append provenance data to file
-            self.scmd.appendData(self.provfilename)
-            #Copy provenance file back to the container
-            self.fileCopyIn(self.location, container_id, self.provfilename, self.provfilepath)
-            #Remove the local copy of the provenance file
-            os.remove(self.provfilename)
-            #Commit container changes
-            self.container_save_as(container_id, new_name, new_tag)
-            #Build new label string... information from Chuck needed.
-            new_label_string = provinator.get_commit_label()
-            #Write string to new image using put_label_image
-            image_id = self.get_imageID(new_name)
-            #print image_id
-            self.set_image(image_id)
-            self.put_label_image(new_label_string)
-        else:
-            pass
-
-        #image_name = cmd_string.rsplit(' ', 1) [1]
-        #image_id = self.get_imageID(image_name)
-        #self.set_image(image_id)
-        #label = self.get_label()
-        #run_time = str(datetime.datetime.now())
-        #host_name = socket.gethostname()
-        #this_user = os.getlogin()
-        #prev_container = self.get_prev_container()
-        #docker_path = str(self.location)
-        #docker_version = self.get_docker_version()
-        #hash = random.getrandbits(32)
-        #prev_label = self.get_label()
-        #print "hash value: %08x" % hash
-        #subprocess.Popen(cmd_string, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
-        #time.sleep(1)
-        #container_id = self.get_containerID(image_name)
-        #print 'CID:' + container_id
-        #print 'commit'
-
-    def fileCopyOut(self, dockerlocation, containerid, filename, path):
-        copy_cmd =  str(dockerlocation) + ' cp ' + containerid + ":" + path + filename + " ."
-        thisCommand = Command(copy_cmd)
-        thisCommand.run()
-
-    def fileCopyIn(self, dockerlocation, containerid, filename, path):
-        copy_cmd =  str(dockerlocation) + ' cp '+ filename + " " + containerid + ":" + path + filename
-        thisCommand = Command(copy_cmd)
-        thisCommand.run()
-
-    def hasProv(self, containerid, filename, path):
-        file = capture_stdout("docker exec " + containerid + " ls " + path)
-        for line in file.stdout:
-            if filename in line:
-                return True
-        return False
-
-    def put_label_image(self, label):
-        """put_label attaches json metadata to smartcontainer label"""
-
-        # Due to the structure of docker, we have to do this in a series of
-        # steps. This method attaches a label to a image by creating a
-        # temporary container with a label using docker run. We then save that
-        # container to a new image with the same.
-
-        # Only proceed if the input string is valid Json
-        if self.validate_json(label):
-            if self.imageID is not None:
-
-                # First get tag and name for image id passed to method
-                repository, tag = self.get_image_info()
-
-                # Now "attach" the label by running a new container from the imageID
-                # Not using do_command because of potential for endless looping if we are writing labels
-                # in the capture_cmd_workflow routine.
-                label_cmd_string = str(self.location) + " run --name=labeltmp --label=" + \
-                                  self.label_prefix + "='" + label + "' " + self.imageID + " /bin/echo"
-                subprocess.call(label_cmd_string, shell=True)
-                # label_cmd_string = " run --name=labeltmp --label=" + \
-                #                    self.label_prefix + "='" + label + "' " + imageID + " /bin/echo"
-                # self.set_command(label_cmd_string)
-                # self.do_command()
-
-                # Save container with new label to new image with previous repo and tag
-                self.container_save_as('labeltmp', repository, tag)
-
-                # Stop the running container so it can be removed
-                self.stop_container('labeltmp')
-
-                # remove temporary container
-                self.remove_image('labeltmp')
-            else:
-                raise DockerInputError("Image ID invalid")
-        else:
-            raise DockerInputError("Not a valid Json string")
-
-    def container_save_as(self, name, saveas, tag):
-        """ Saves a container to a new image
-        :param name: the name of the container to be saved
-        :param saveas: the name of the image to be created
-        :param tag: the tag attached to the new image
-        :return: none
-        """
-        commit_cmd_string = str(self.location) + ' commit ' + name + ' ' + saveas
-        if tag != "":
-            commit_cmd_string = commit_cmd_string + ':' + tag
-        commit = Command(commit_cmd_string)
-        commit.run()
-
-    def stop_container(self, name):
-        """ stops a specified container
-        :param name: name of the container to stop
-        :return:none
-        """
-        stop_container_string = str(self.location) + ' stop ' + name
-        stop_container = Command(stop_container_string)
-        stop_container.run()
-
-    def remove_image(self, name):
-        """ removes a named image
-        :param name: the name of the image to be removed
-        :return: none
-        """
-        rm_container_string = str(self.location) + ' rm ' + name
-        rm_container = Command(rm_container_string)
-        rm_container.run()
-
-    def validate_json(self,jsonString):
-        """ validate_json performs a simple test of validity by attempting a load of the string
-        :param jsonString:
-        :return: true if successful
-        """
-        try:
-            json_object = json.loads(jsonString)
-        except ValueError, e:
-            return False
-        return True
-
-
-    def get_label(self):
-        """get_label returns smartconainer json string from docker image or container"""
-        self.get_metadata()
-
-        if bool(self.metadata):
-            AllDictionary = json.loads(self.metadata)
-            ConfigDictionary = AllDictionary["Config"]
-            label = ConfigDictionary["Labels"]
-        return label
-
-    def get_prev_container(self):
-        """
-        :return: Container ID of previous container from docker image
-        """
-        self.get_metadata()
-
-        if bool(self.metadata):
-            AllDictionary = json.loads(self.metadata)
-            #ConfigDictionary = AllDictionary["Config"]
-            container = AllDictionary["Container"]
-        return container
-
-# Quick hack to get image id for current phusion/baseimage
-# for testing purposes. We assume that the image has already
-# been pulled from the docker hub repo.
-    def get_imageID(self, image):
-        # default_container = "phusion/baseimage"
-        imageID = None
-        docker_command = str(self.location) + ' images'
-        output = capture_stdout(docker_command)
-        for line in io.TextIOWrapper(output.stdout):
-            if image in repr(line):
-                imageID = line.split()[2]
-        if imageID is None:
-            raise DockerImageError('No Image')
-        return imageID
-
-    def get_containerID(self, image):
-        containerID = None
-        docker_command = str(self.location) + ' ps -a'
-        #print docker_command
-        output = capture_stdout(docker_command)
-        for line in io.TextIOWrapper(output.stdout):
-            if image in repr(line):
-                containerID = line.split()[0]
-        if containerID is None:
-            raise DockerImageError('No Container')
-        return containerID
-
-    def get_containerImage(self, containerID):
-        imageName = None
-        docker_command = str(self.location) + ' ps -a'
-        #print docker_command
-        output = capture_stdout(docker_command)
-        for line in io.TextIOWrapper(output.stdout):
-            if containerID in repr(line):
-                imageName = line.split()[1]
-        if imageName is None:
-            raise DockerImageError('No Image for Container')
-        return imageName
-
-    def get_docker_version(self):
-        docker_version = None
-        docker_command = str(self.location) + " version --format '{{.Server.Version}}'"
-        output = capture_stdout(docker_command)
-        for line in io.TextIOWrapper(output.stdout):
-            docker_version = line
-        return docker_version
-
-    def get_image_info(self):
-        docker_command = str(self.location) + ' images'
-        output = capture_stdout(docker_command)
-        if self.imageID is not None:
-            for line in io.TextIOWrapper(output.stdout):
-                if self.imageID in repr(line):
-                    repository = line.split()[0]
-                    tag = line.split()[1]
-            return repository, tag
-        else:
-            raise DockerImageError
-
-
-
-# Each image has a metadata record. This returns a list of all label
-# strings contained in the metadata.
-    def get_metadata(self):
-        docker_command = str(self.location) + ' inspect ' + self.imageID
-        p = Command(docker_command, stdout=Capture(buffer_size=-1))
-        p.run()
-        # Testing directly in the string works if the output is only
-        # one line.
-        # if 'No such image' in p.stdout:
-        # raise DockerImageError
-        # data = [json.loads(str(item)) for item in p.stdout.readline().strip().split('\n')]
-        json_block = []
-        line = p.stdout.readline()
-        while (line):
-            if 'no such image' in line:
-                raise DockerImageError
-            # Stupid sarge appears to add a blank line between
-            # json statements. This checks for a blank line and
-            # cycles to the next line if it is blank.
-            if re.match(r'^\s*$', line):
-                line = p.stdout.readline()
-                continue
-            json_block.append(line)
-            line = p.stdout.readline()
-        s = ''.join(json_block)
-        s = s[1:-2]
-        self.metadata = s
-
-
-    def set_image(self, image):
-        """set_image
-            sets docker image id to docker object.
-            :param image: image id
-            """
-        self.imageID = image
-
-
-    def set_command(self, command):
-        """set_command
-            sets the docker command to docker object
-            :param command: docker command
-            """
-        if len(command) > 0:
-            self.command = command
-        else:
-            raise DockerInputError("Invalid Command")
-
-    # Function to compare sematic versioning
-    # See http://zxq9.com/archives/797 for explaination
-    # and http://semver.org/ for information on semantic versioning
     def ver_tuple(self, z):
+        """ver_tuple: Version Tuple.
+
+        Versioning tuple parser for semantic versioning.
+        Note:
+            See http://zxq9.com/archives/797 for explaination.
+            See http://semver.org/ for info on semantic versioning.
+        Args:
+            z (str): String containing semantic version.
+        Returns:
+            tuple: Tuple of the form Major, Minor and Patch.
+
+        """
         return tuple([int(x) for x in z.split('.') if x.isdigit()])
 
     def ver_cmp(self, a, b):
+        """ver_cmp: Semantic Version Comparison.
+
+        Compares two tuples containing semantic version of the form
+        Major, Minor and Patch.
+
+        Args:
+            a,b (str): Strings containing semantic versions to be compared.
+        Returns:
+            cmp: Result of python builtin cmp function.
+                 Returns -1 if x < y, returns 0 if x == y and 1 if x > y
+        """
         return cmp(self.ver_tuple(a), self.ver_tuple(b))
 
+    def infect(self, image):
+        """infect: Infect docker image with Provenance.
+
+        Args:
+            image (TODO): ImageID
+
+        Returns: TODO
+
+        """
+        self.dcli.infect(image)

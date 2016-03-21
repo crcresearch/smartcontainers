@@ -39,7 +39,7 @@ class Tox(TestCommand):
 
 
 
-dependencies = ['click==4.1', 'rdflib', 'rdflib-jsonld', 'sarge', 'orcid',
+dependencies = ['click==4.1', 'rdflib', 'rdflib-jsonld', 'orcid',
                 'orcidfind', 'pyparsing', 'pytz', 'requests==2.7.0', 'docker-py']
 
 setup(
