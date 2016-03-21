@@ -69,6 +69,14 @@ class scClient(docker.Client):
         else:
             super(scClient, self).commit(container, *args, **kwargs)
 
+    def build(self, *args, **kwargs):
+        #path or fileobj must exist. If not, we should abort
+
+        #Build Metadata
+
+        #Execute the build
+        generator = super(scClient,self).build(*args, **kwargs)
+
     def put_label_image(self, image, label, *args, **kwargs):
         """Write a new label to a new image.
 
