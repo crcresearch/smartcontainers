@@ -52,9 +52,8 @@ def docker(command):
 
     :param command: string
     """
-    processdocker = DockerCli(command)
-    processdocker.sanity_check()
-    processdocker.do_command()
+    processdocker = DockerCli()
+    processdocker.do_command(command)
 
 
 @cli.command()
