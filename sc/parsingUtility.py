@@ -52,6 +52,17 @@ class parsingUtility:
         #that the command is always the first word in the string
         return cmdString.split()[0]
 
+    def get_command_data(self, command):
+        """Obtains the second part of the command string.
+
+        Args:
+            command (str): The command string.
+
+        Returns: The second part of the command string.
+
+        """
+        return command.split(" ", 1)[1]
+
     def parseFROM(self, cmdFROM):
         pass
 
