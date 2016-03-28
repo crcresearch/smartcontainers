@@ -6,12 +6,51 @@ class parsingUtility:
         pass
 
     def parseCommand(self,cmdString):
-        #Main entry point
-        pass
+        #Directs the command processing to the appropriate function,
+        #based on the type of command received.
+
+        #Get the command type from the cmdString
+        thisCommand = self.getCommand(cmdString)
+        #Call the appropriate routine based on the command type
+        if thisCommand == 'FROM':
+            self.parseFROM(cmdString)
+        elif thisCommand == 'MAINTAINER':
+            self.parseMAINTAINER(cmdString)
+        elif thisCommand == 'RUN':
+            self.parseRUN(cmdString)
+        elif thisCommand == 'CMD':
+            self.parseCMD(cmdString)
+        elif thisCommand == 'LABEL':
+            self.parseLABEL(cmdString)
+        elif thisCommand == 'EXPOSE':
+            self.parseEXPOSE(cmdString)
+        elif thisCommand == 'ENV':
+            self.parseENV(cmdString)
+        elif thisCommand == 'ADD':
+            self.parseADD(cmdString)
+        elif thisCommand == 'COPY':
+            self.parseCOPY(cmdString)
+        elif thisCommand == 'ENTRYPOINT':
+            self.parseENTRYPOINT(cmdString)
+        elif thisCommand == 'VOLUME':
+            self.parseVOLUME(cmdString)
+        elif thisCommand == 'USER':
+            self.parseUSER(cmdString)
+        elif thisCommand == 'WORKDIR':
+            self.parseWORKDIR(cmdString)
+        elif thisCommand == 'ARG':
+            self.parseARG(cmdString)
+        elif thisCommand == 'ONBUILD':
+            self.parseONBUILD(cmdString)
+        elif thisCommand == 'STOPSIGNAL':
+            self.parseSTOPSIGNAL(cmdString)
+        else:
+            print "Error parsing command"
 
     def getCommand(self, cmdString):
-        #returns command from cmdString
-        pass
+        #returns command from cmdString, with the assumption
+        #that the command is always the first word in the string
+        return cmdString.split()[0]
 
     def parseFROM(self, cmdFROM):
         pass
