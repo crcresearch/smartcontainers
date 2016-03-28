@@ -11,39 +11,41 @@ class parsingUtility:
 
         #Get the command type from the cmdString
         thisCommand = self.getCommand(cmdString)
+        command_data = self.get_command_data(cmdString)
+
         #Call the appropriate routine based on the command type
         if thisCommand == 'FROM':
-            self.parseFROM(cmdString)
+            self.parseFROM(command_data)
         elif thisCommand == 'MAINTAINER':
-            self.parseMAINTAINER(cmdString)
+            self.parseMAINTAINER(command_data)
         elif thisCommand == 'RUN':
-            self.parseRUN(cmdString)
+            self.parseRUN(command_data)
         elif thisCommand == 'CMD':
-            self.parseCMD(cmdString)
+            self.parseCMD(command_data)
         elif thisCommand == 'LABEL':
-            self.parseLABEL(cmdString)
+            self.parseLABEL(command_data)
         elif thisCommand == 'EXPOSE':
-            self.parseEXPOSE(cmdString)
+            self.parseEXPOSE(command_data)
         elif thisCommand == 'ENV':
-            self.parseENV(cmdString)
+            self.parseENV(command_data)
         elif thisCommand == 'ADD':
-            self.parseADD(cmdString)
+            self.parseADD(command_data)
         elif thisCommand == 'COPY':
-            self.parseCOPY(cmdString)
+            self.parseCOPY(command_data)
         elif thisCommand == 'ENTRYPOINT':
-            self.parseENTRYPOINT(cmdString)
+            self.parseENTRYPOINT(command_data)
         elif thisCommand == 'VOLUME':
-            self.parseVOLUME(cmdString)
+            self.parseVOLUME(command_data)
         elif thisCommand == 'USER':
-            self.parseUSER(cmdString)
+            self.parseUSER(command_data)
         elif thisCommand == 'WORKDIR':
-            self.parseWORKDIR(cmdString)
+            self.parseWORKDIR(command_data)
         elif thisCommand == 'ARG':
-            self.parseARG(cmdString)
+            self.parseARG(command_data)
         elif thisCommand == 'ONBUILD':
-            self.parseONBUILD(cmdString)
+            self.parseONBUILD(command_data)
         elif thisCommand == 'STOPSIGNAL':
-            self.parseSTOPSIGNAL(cmdString)
+            self.parseSTOPSIGNAL(command_data)
         else:
             print "Error parsing command"
 
