@@ -32,6 +32,9 @@ class BuildProcessorTestCase(unittest.TestCase):
             self.processors[1].PU
         ]
 
+        self.data_one = self.parsers[0].data
+        self.data_two = self.parsers[1].data
+
     def test_processDF(self):
         # Process the test data file, and check that the return is 0,
         #  indicating that no errors were encountered.
@@ -61,3 +64,19 @@ class BuildProcessorTestCase(unittest.TestCase):
 
         self.assertEqual(self.parsers[0].data["maintainer"], "Kimbro Staken")
         self.assertEqual(self.parsers[1].data["maintainer"], second_maintainer)
+
+    def test_parse_run(self):
+        parameter_one = "install -y python-software-properties python"
+        parameter_two = "cp Schema\ 32/densities.csv "
+        parameter_two += "Schema\ 32/autoRegressionParameters.csv "
+        parameter_two += "Schema\ 32/scenario_32.xsd /om"
+
+        special_command = self.data_one["run"][0]["special"]
+        self.assertIn("apt-get", special_command)
+        self.assertEqual(special_command["apt-get"][0], parameter_one)
+
+        self.assertEqual(self.data_two["run"][9]["original"], parameter_two)
+
+        args_run_command = self.data_two["run"][8]
+        self.assertEqual(args_run_command["executable"], "sh")
+        self.assertEqual(args_run_command["parameters"][1], "echo")

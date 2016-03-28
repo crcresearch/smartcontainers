@@ -14,6 +14,7 @@ WORKDIR /om
 RUN cp /openmalaria/build/openMalaria /om/
 RUN curl -L -O https://github.com/SwissTPH/openmalaria/releases/download/binary-archive/Schema.32.zip
 RUN unzip Schema.32.zip
+RUN [ "sh", "-c", "echo", "$HOME" ]
 RUN cp Schema\ 32/densities.csv Schema\ 32/autoRegressionParameters.csv Schema\ 32/scenario_32.xsd /om
 VOLUME /om/scenarios
 ENTRYPOINT ["./openMalaria"]

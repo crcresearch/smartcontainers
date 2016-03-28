@@ -1,6 +1,9 @@
 import json
 
 
+RUN_ARGS = ["apt-get", "yum", "pip", "git"]
+
+
 class parsingUtility:
 
     def __init__(self):
@@ -79,8 +82,39 @@ class parsingUtility:
     def parseMAINTAINER(self, data):
         self.data["maintainer"] = data
 
-    def parseRUN(self, cmdRUN):
-        pass
+    def parseRUN(self, data):
+        if "run" not in self.data:
+            self.data["run"] = []
+
+        if data.startswith("["):
+            # exec command.
+            run_command = data[1:].split(",")
+            new_run_command = {
+                "executable": run_command[0].strip()[1:-1],
+            }
+            parameters = []
+            for parameter in run_command[1:]:
+                parameters.append(parameter.strip()[1:-1])
+            new_run_command["parameters"] = parameters
+
+            self.data["run"].append(new_run_command)
+        else:
+            # shell command.
+            commands = data.split("&&")
+            new_item = {"original": data}
+
+            for command in commands:
+                split_command = command.split()
+
+                if split_command[0] in RUN_ARGS:
+                    if "special" not in new_item:
+                        new_item["special"] = {}
+                    if split_command[0] not in new_item["special"]:
+                        new_item["special"][split_command[0]] = []
+
+                    new_item["special"][split_command[0]].append(" ".join(split_command[1:]))
+
+            self.data["run"].append(new_item)
 
     def parseCMD(self,cmdCMD):
         pass
