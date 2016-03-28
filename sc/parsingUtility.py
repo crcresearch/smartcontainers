@@ -76,8 +76,8 @@ class parsingUtility:
     def parseFROM(self, cmdFROM):
         pass
 
-    def parseMAINTAINER(self, cmdMAINTAINER):
-        pass
+    def parseMAINTAINER(self, data):
+        self.data["maintainer"] = data
 
     def parseRUN(self, cmdRUN):
         pass
@@ -120,5 +120,3 @@ class parsingUtility:
 
     def parseSTOPSIGNAL(self, cmdSTOPSIGNAL):
         pass
-
-

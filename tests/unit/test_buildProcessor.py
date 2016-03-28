@@ -55,3 +55,9 @@ class BuildProcessorTestCase(unittest.TestCase):
             "data/data1.json")))
         self.assertTrue(os.path.isfile(os.path.join(base_dir,
             "data/data2.json")))
+
+    def test_parse_maintainer(self):
+        second_maintainer = "Nicolas Reed <Nicolas.Reed.102 at nd dot edu>"
+
+        self.assertEqual(self.parsers[0].data["maintainer"], "Kimbro Staken")
+        self.assertEqual(self.parsers[1].data["maintainer"], second_maintainer)
