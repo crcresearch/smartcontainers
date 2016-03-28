@@ -3,7 +3,7 @@
 class parsingUtility:
 
     def __init__(self):
-        pass
+        self.data = {}
 
     def parseCommand(self,cmdString):
         #Directs the command processing to the appropriate function,
