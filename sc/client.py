@@ -17,6 +17,7 @@ import os
 import scMetadata
 import tempfile
 import tarfile
+import buildProcessor
 
 
 class scClient(docker.Client):
@@ -69,13 +70,23 @@ class scClient(docker.Client):
         else:
             super(scClient, self).commit(container, *args, **kwargs)
 
-    def build(self, *args, **kwargs):
-        #path or fileobj must exist. If not, we should abort
-
-        #Build Metadata
+    def build(self, *args, **kwargs): #TODO Test and validate this code.
+        """Capture Metadata from the Build command before execution
+        :param args: path, fileobj
+        :return: Nothing
+        """
+        #Instanciate the build processor
+        BP = buildProcessor.buildProcessor()
+        #path or fileobj must exist. If not, we let the docker-py interface handle any error reporting
+        if kwargs['path'] != None:
+            #Build Metadata
+            BP.processDF(kwargs['path'])
+        elif kwargs['fileobj'] != None:
+            #Build Metadata
+            BP.processFO(kwargs['fileobj'])
 
         #Execute the build
-        generator = super(scClient,self).build(*args, **kwargs)
+        super(scClient,self).build(*args, **kwargs)
 
     def put_label_image(self, image, label, *args, **kwargs):
         """Write a new label to a new image.
