@@ -27,18 +27,29 @@ class BuildProcessorTestCase(unittest.TestCase):
         self.results.append(self.processors[1].processDF(os.path.join(
             base_dir, 'data/openmalaria/Dockerfile')))
 
+        self.parsers = [
+            self.processors[0].PU,
+            self.processors[1].PU
+        ]
+
     def test_processDF(self):
         # Process the test data file, and check that the return is 0,
         #  indicating that no errors were encountered.
         self.assertEqual(self.results[0], 0)
         self.assertEqual(self.results[1], 0)
 
-    def test_write_out_data(self):
-        parser = self.processors[0].PU
-        parser.write_out_data(os.path.join(base_dir, "data/data1.json"))
+    def test_check_steps(self):
+        second_step = "RUN apt-get --yes update && apt-get --yes upgrade"
 
-        parser = self.processors[1].PU
-        parser.write_out_data(os.path.join(base_dir, "data/data2.json"))
+        self.assertEqual(self.parsers[0].steps[0], "FROM ubuntu")
+        self.assertEqual(self.parsers[1].steps[2], second_step)
+
+    def test_write_out_data(self):
+        self.parsers[0].write_out_data(os.path.join(base_dir,
+            "data/data1.json"))
+
+        self.parsers[1].write_out_data(os.path.join(base_dir,
+            "data/data2.json"))
 
         self.assertTrue(os.path.isfile(os.path.join(base_dir,
             "data/data1.json")))

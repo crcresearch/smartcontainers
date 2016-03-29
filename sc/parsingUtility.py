@@ -4,6 +4,7 @@ import json
 class parsingUtility:
 
     def __init__(self):
+        self.steps = []
         self.data = {}
 
     def write_out_data(self, file_name="data.json"):
@@ -53,6 +54,8 @@ class parsingUtility:
             self.parseSTOPSIGNAL(command_data)
         else:
             print "Error parsing command"
+
+        self.steps.append(cmdString)
 
     def getCommand(self, cmdString):
         #returns command from cmdString, with the assumption
