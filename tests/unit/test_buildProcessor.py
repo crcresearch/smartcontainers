@@ -77,6 +77,5 @@ class BuildProcessorTestCase(unittest.TestCase):
 
         self.assertEqual(self.data_two["run"][9]["original"], parameter_two)
 
-        args_run_command = self.data_two["run"][8]
-        self.assertEqual(args_run_command["executable"], "sh")
-        self.assertEqual(args_run_command["parameters"][1], "echo")
+    def test_parse_expose(self):
+        self.assertEqual(self.data_one["expose"][2], "443")

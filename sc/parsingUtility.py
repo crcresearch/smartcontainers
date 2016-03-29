@@ -122,8 +122,11 @@ class parsingUtility:
     def parseLABEL(self, cmdLABEL):
         pass
 
-    def parseEXPOSE(self, cmdEXPOSE):
-        pass
+    def parseEXPOSE(self, data):
+        if "expose" not in self.data:
+            self.data["expose"] = []
+
+        self.data["expose"].extend(data.split())
 
     def parseENV(self, cmdENV):
         pass
