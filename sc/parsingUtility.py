@@ -1,9 +1,14 @@
+import json
 
 
 class parsingUtility:
 
     def __init__(self):
         self.data = {}
+
+    def write_out_data(self, file_name="data.json"):
+        with open(file_name, "w") as data_file:
+            json.dump(self.data, data_file, indent=4)
 
     def parseCommand(self,cmdString):
         #Directs the command processing to the appropriate function,

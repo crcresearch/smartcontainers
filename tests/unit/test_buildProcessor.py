@@ -32,3 +32,15 @@ class BuildProcessorTestCase(unittest.TestCase):
         #  indicating that no errors were encountered.
         self.assertEqual(self.results[0], 0)
         self.assertEqual(self.results[1], 0)
+
+    def test_write_out_data(self):
+        parser = self.processors[0].PU
+        parser.write_out_data(os.path.join(base_dir, "data/data1.json"))
+
+        parser = self.processors[1].PU
+        parser.write_out_data(os.path.join(base_dir, "data/data2.json"))
+
+        self.assertTrue(os.path.isfile(os.path.join(base_dir,
+            "data/data1.json")))
+        self.assertTrue(os.path.isfile(os.path.join(base_dir,
+            "data/data2.json")))
