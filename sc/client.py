@@ -44,7 +44,8 @@ class scClient(docker.Client):
         Returns: Nothing.
 
         """
-        # Extends the docker-py commit command to include smartcontainer functions
+        # Extends the docker-py commit command to include
+        #              smartcontainer functions
         # Check if the container being committed has previous
         #                     provenance information stored in it.
         if self.hasProv(container, self.provfilename, self.provfilepath):
@@ -70,12 +71,21 @@ class scClient(docker.Client):
             super(scClient, self).commit(container, *args, **kwargs)
 
     def build(self, *args, **kwargs):
-        #path or fileobj must exist. If not, we should abort
+        """build; Docker Build for smartcontainers.
 
-        #Build Metadata
+        Args:
+            image: Image ID
+            label: Label string to write to the container
 
-        #Execute the build
-        generator = super(scClient,self).build(*args, **kwargs)
+        Returns: Nothing.
+
+        """
+        # path or fileobj must exist. If not, we should abort
+
+        # Build Metadata
+
+        # Execute the build
+        generator = super(scClient, self).build(*args,  **kwargs)
 
     def put_label_image(self, image, label, *args, **kwargs):
         """Write a new label to a new image.
@@ -147,11 +157,13 @@ class scClient(docker.Client):
         Returns: Nothing.
 
         """
-        # Get a directory listing from the target directory inside the container.
+        # Get a directory listing from the
+        #      target directory inside the container.
         # Examine the directory contents for the provenance file.
         # Return true if found, false if not found.
         execid = super(scClient, self).exec_create(container=containerid,
-                                                   stdout=True, cmd='ls ' + path)
+                                                   stdout=True,
+                                                   cmd='ls ' + path)
         text = super(scClient, self).exec_start(exec_id=execid)
         if 'SCProv.jsonld' in text:
             return True
@@ -256,14 +268,3 @@ class scClient(docker.Client):
 
         """
         pass
-
-    def build(self, *args, **kwargs):
-        """TODO: Docstring for build.
-
-        Args:
-            1 (TODO): TODO
-
-        Returns: TODO
-
-        """
-        super(scClient, self).build(*args, **kwargs)
