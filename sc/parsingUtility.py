@@ -76,8 +76,24 @@ class parsingUtility:
         """
         return command.split(" ", 1)[1]
 
-    def parseFROM(self, cmdFROM):
-        pass
+    def parseFROM(self, data):
+        if "from" not in self.data:
+            self.data["from"] = []
+
+        new_item = {"string": data}
+        if ":" in data:
+            split_data = data.split(":")
+            new_item["image"] = split_data[0]
+            new_item["tag"] = split_data[1]
+        elif "@" in data:
+            split_data = data.split("@")
+            new_item["image"] = split_data[0]
+            new_item["digest"] = split_data[1]
+        else:
+            new_item["image"] = data
+            new_item["tag"] = "latest"
+
+        self.data["from"].append(new_item)
 
     def parseMAINTAINER(self, data):
         self.data["maintainer"] = data

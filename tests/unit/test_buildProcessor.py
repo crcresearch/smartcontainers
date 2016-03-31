@@ -79,3 +79,14 @@ class BuildProcessorTestCase(unittest.TestCase):
 
     def test_parse_expose(self):
         self.assertEqual(self.data_one["expose"][2], "443")
+
+    def test_parse_from(self):
+        from_data_one = self.data_one["from"][0]
+        self.assertEqual(from_data_one["string"], "ubuntu")
+        self.assertEqual(from_data_one["image"], "ubuntu")
+        self.assertEqual(from_data_one["tag"], "latest")
+
+        from_data_two = self.data_two["from"][0]
+        self.assertEqual(from_data_two["string"], "ubuntu:14.04")
+        self.assertEqual(from_data_two["image"], "ubuntu")
+        self.assertEqual(from_data_two["tag"], "14.04")
