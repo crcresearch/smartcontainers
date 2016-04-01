@@ -216,8 +216,17 @@ class parsingUtility:
 
         self.data["workdir"].append(data)
 
-    def parseARG(self, cmdARG):
-        pass
+    def parseARG(self, data):
+        if "arg" not in self.data:
+            self.data["arg"] = []
+
+        split_data = data.split("=")
+        new_item = {"name": split_data[0]}
+
+        if len(split_data) > 1:
+            new_item["value"] = split_data[1]
+
+        self.data["arg"].append(new_item)
 
     def parseONBUILD(self, cmdONBUILD):
         pass

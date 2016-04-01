@@ -26,4 +26,7 @@ VOLUME ["/test1vol", "/test2vol", "/test3vol"]
 
 USER apache
 
+ARG test
+ARG test1=1
+
 CMD ["/bin/bash"]

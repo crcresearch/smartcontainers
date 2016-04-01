@@ -126,3 +126,6 @@ class BuildProcessorTestCase(unittest.TestCase):
 
     def test_parse_workdir(self):
         self.assertEqual(self.data_two["workdir"][0], "/om")
+
+    def test_parse_arg(self):
+        self.assertEqual(self.data_one["arg"][1]["value"], "1")
