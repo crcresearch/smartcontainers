@@ -210,8 +210,11 @@ class parsingUtility:
 
         self.data["user"].append(data)
 
-    def parseWORKDIR(self, cmdWORKDIR):
-        pass
+    def parseWORKDIR(self, data):
+        if "workdir" not in self.data:
+            self.data["workdir"] = []
+
+        self.data["workdir"].append(data)
 
     def parseARG(self, cmdARG):
         pass

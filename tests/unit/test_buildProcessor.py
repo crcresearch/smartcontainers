@@ -123,3 +123,6 @@ class BuildProcessorTestCase(unittest.TestCase):
 
     def test_parse_user(self):
         self.assertEqual(self.data_one["user"][0], "apache")
+
+    def test_parse_workdir(self):
+        self.assertEqual(self.data_two["workdir"][0], "/om")
