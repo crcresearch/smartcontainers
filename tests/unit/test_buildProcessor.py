@@ -99,3 +99,11 @@ class BuildProcessorTestCase(unittest.TestCase):
         self.assertEqual(data_label["description"], description)
         self.assertIn("empty", data_label)
         self.assertEqual(data_label["empty"], "")
+
+    def test_parse_add(self):
+        data_add = self.data_one["add"]
+
+        self.assertIn("dest", data_add[0])
+        self.assertEqual(data_add[0]["dest"], "/")
+        self.assertIn("src", data_add[1])
+        self.assertEqual(data_add[1]["src"][1], "Dockerfile.txt")

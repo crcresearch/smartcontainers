@@ -158,8 +158,21 @@ class parsingUtility:
     def parseENV(self, cmdENV):
         pass
 
-    def parseADD(self, cmdADD):
-        pass
+    def parseADD(self, data):
+        if "add" not in self.data:
+            self.data["add"] = []
+
+        if data.startswith("["):
+            split_data = json.loads(data)
+        else:
+            split_data = data.split()
+
+        new_item = {
+            "src": split_data[:-1],
+            "dest": split_data[-1]
+        }
+
+        self.data["add"].append(new_item)
 
     def parseCOPY(self,cmdCOPY):
         pass
