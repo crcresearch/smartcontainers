@@ -19,9 +19,10 @@ context = {"prov": "http://www.w3.org/ns/prov#",
            "xsd": "http://www.w3.org/2001/XMLSchema#",
            "dc": "http://purl.org/dc/terms"}
 
-class RegistryHolder(type):
+class VocabularyRegistry(type):
 
     REGISTRY = {}
+    built = False
 
     def __new__(cls, name, bases, attrs):
         new_cls = type.__new__(cls, name, bases, attrs)
@@ -36,12 +37,19 @@ class RegistryHolder(type):
     def get_registry(cls):
         return dict(cls.REGISTRY)
 
+    @classmethod
+    def get_json_ld(cls):
+        pass
 
-class BaseRegisteredClass:
-    __metaclass__ = RegistryHolder
+class BaseVocabulary:
+    __metaclass__ = VocabularyRegistry
     """
         Any class that will inherits from BaseRegisteredClass will be included
         inside the dict RegistryHolder.REGISTRY, the key being the name of the
         class and the associated value, the class itself.
     """
-    pass
+    graph = rdflib.Dataset(default_union=True)
+    context = {}
+    namespace = []
+    def build(self):
+        pass
