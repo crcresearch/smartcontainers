@@ -231,5 +231,5 @@ class parsingUtility:
     def parseONBUILD(self, cmdONBUILD):
         pass
 
-    def parseSTOPSIGNAL(self, cmdSTOPSIGNAL):
-        pass
+    def parseSTOPSIGNAL(self, data):
+        self.data["stopsignal"] = data

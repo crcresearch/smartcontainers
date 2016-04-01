@@ -29,4 +29,6 @@ USER apache
 ARG test
 ARG test1=1
 
+STOPSIGNAL 9
+
 CMD ["/bin/bash"]

@@ -129,3 +129,6 @@ class BuildProcessorTestCase(unittest.TestCase):
 
     def test_parse_arg(self):
         self.assertEqual(self.data_one["arg"][1]["value"], "1")
+
+    def test_parse_stopsignal(self):
+        self.assertEqual(self.data_one["stopsignal"], "9")
