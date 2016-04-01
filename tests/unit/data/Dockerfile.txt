@@ -21,4 +21,7 @@ ADD ["test.txt", "Dockerfile.txt", "/"]
 COPY Dockerfile.txt /
 COPY ["test.txt", "Dockerfile.txt", "/"]
 
+VOLUME /testvol /test2vol
+VOLUME ["/test1vol", "/test2vol", "/test3vol"]
+
 CMD ["/bin/bash"]

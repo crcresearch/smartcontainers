@@ -193,8 +193,16 @@ class parsingUtility:
     def parseENTRYPOINT(self, cmdENTRYPOINT):
         pass
 
-    def parseVOLUME(self, cmdVOLUME):
-        pass
+    def parseVOLUME(self, data):
+        if "volume" not in self.data:
+            self.data["volume"] = []
+
+        if data.startswith("["):
+            split_data = json.loads(data)
+        else:
+            split_data = data.split()
+
+        self.data["volume"].extend(split_data)
 
     def parseUSER(self, cmdUSER):
         pass

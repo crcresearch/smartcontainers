@@ -114,3 +114,9 @@ class BuildProcessorTestCase(unittest.TestCase):
         self.assertEqual(data_copy[0]["dest"], "/")
         self.assertIn("src", data_copy[1])
         self.assertEqual(data_copy[1]["src"][1], "Dockerfile.txt")
+
+    def test_parse_volume(self):
+        self.assertEqual(self.data_one["volume"][1], "/test2vol")
+
+        self.assertEqual(len(self.data_two["volume"]), 1)
+        self.assertEqual(self.data_two["volume"][0], "/om/scenarios")
