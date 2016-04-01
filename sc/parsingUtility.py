@@ -174,8 +174,21 @@ class parsingUtility:
 
         self.data["add"].append(new_item)
 
-    def parseCOPY(self,cmdCOPY):
-        pass
+    def parseCOPY(self, data):
+        if "copy" not in self.data:
+            self.data["copy"] = []
+
+        if data.startswith("["):
+            split_data = json.loads(data)
+        else:
+            split_data = data.split()
+
+        new_item = {
+            "src": split_data[:-1],
+            "dest": split_data[-1]
+        }
+
+        self.data["copy"].append(new_item)
 
     def parseENTRYPOINT(self, cmdENTRYPOINT):
         pass
