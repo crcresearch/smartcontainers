@@ -120,3 +120,6 @@ class BuildProcessorTestCase(unittest.TestCase):
 
         self.assertEqual(len(self.data_two["volume"]), 1)
         self.assertEqual(self.data_two["volume"][0], "/om/scenarios")
+
+    def test_parse_user(self):
+        self.assertEqual(self.data_one["user"][0], "apache")

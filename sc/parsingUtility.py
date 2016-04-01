@@ -204,8 +204,11 @@ class parsingUtility:
 
         self.data["volume"].extend(split_data)
 
-    def parseUSER(self, cmdUSER):
-        pass
+    def parseUSER(self, data):
+        if "user" not in self.data:
+            self.data["user"] = []
+
+        self.data["user"].append(data)
 
     def parseWORKDIR(self, cmdWORKDIR):
         pass

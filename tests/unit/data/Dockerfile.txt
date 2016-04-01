@@ -24,4 +24,6 @@ COPY ["test.txt", "Dockerfile.txt", "/"]
 VOLUME /testvol /test2vol
 VOLUME ["/test1vol", "/test2vol", "/test3vol"]
 
+USER apache
+
 CMD ["/bin/bash"]
