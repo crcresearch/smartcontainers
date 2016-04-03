@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-"""RDFlib Graph Factory for SmartContainers.
+"""RDFlib Graph Registry for SmartContainers.
 
 This module provides a common interface to all RDFlib graphs created by all
 vocabularies. New vocabularies should subclass graphFactory.
 """
 import rdflib
-import abc
+import baseVocabulary
+import provVocabulary
+
 #  Create a default dataset graph.
 # ds = Dataset(default_union=True)
 
@@ -19,37 +21,39 @@ context = {"prov": "http://www.w3.org/ns/prov#",
            "xsd": "http://www.w3.org/2001/XMLSchema#",
            "dc": "http://purl.org/dc/terms"}
 
-class VocabularyRegistry(type):
+class VocabularyRegistry(object):
 
     REGISTRY = {}
     built = False
-
-    def __new__(cls, name, bases, attrs):
-        new_cls = type.__new__(cls, name, bases, attrs)
-        """
-            Here the name of the class is used as key but it could be any class
-            parameter.
-        """
-        cls.REGISTRY[new_cls.__name__] = new_cls
-        return new_cls
-
-    @classmethod
-    def get_registry(cls):
-        return dict(cls.REGISTRY)
-
-    @classmethod
-    def get_json_ld(cls):
+    global_graph = rdflib.Dataset(default_union=True)
+    def __init__(self):
         pass
 
-class BaseVocabulary:
-    __metaclass__ = VocabularyRegistry
-    """
-        Any class that will inherits from BaseRegisteredClass will be included
-        inside the dict RegistryHolder.REGISTRY, the key being the name of the
-        class and the associated value, the class itself.
-    """
-    graph = rdflib.Dataset(default_union=True)
-    context = {}
-    namespace = []
-    def build(self):
+    @classmethod
+    def get_registry(self):
+        return dict(self.REGISTRY)
+
+    @classmethod
+    def register(self, vocabulary):
+        if isinstance(vocabulary, baseVocabulary.baseVocabulary):
+            self.REGISTRY[type(vocabulary).__name__] = vocabulary
+
+    @classmethod
+    def build_graph(self):
+        if not self.built:
+            for k in self.REGISTRY:
+                print self.REGISTRY[k]
+                self.REGISTRY[k].build()
+                self.global_graph += self.REGISTRY[k].graph
+            self.built = True
+
+    @classmethod
+    def get_json_ld(self):
+        if not self.built:
+            self.build_graph()
         pass
+
+# Create instances of registry and register vocabularies
+scVocabRegistry = VocabularyRegistry()
+scProvVocab = provVocabulary.provVocabulary()
+VocabularyRegistry.register(scProvVocab)
