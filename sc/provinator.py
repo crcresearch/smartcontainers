@@ -4,12 +4,12 @@ from rdflib.serializer import Serializer
 import rdflib.resource
 import uuid
 
-# Create a default dataset graph.
+#  Create a default dataset graph.
 ds = Dataset(default_union=True)
 
-# JSON-LD serializer requires an explicit context.
-# https://github.com/RDFLib/rdflib-jsonld
-# context = {"@vocab": "http://purl.org/dc/terms/", "@language": "en"}
+# J SON-LD serializer requires an explicit context.
+#  https://github.com/RDFLib/rdflib-jsonld
+#  context = {"@vocab": "http://purl.org/dc/terms/", "@language": "en"}
 
 context = {"prov": "http://www.w3.org/ns/prov#",
            "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -52,25 +52,25 @@ ds.bind("ce", CE)
 default_graph = ds
 
 
-
-        #image_name = cmd_string.rsplit(' ', 1) [1]
-        #image_id = self.get_imageID(image_name)
-        #self.set_image(image_id)
-        #label = self.get_label()
-        #run_time = str(datetime.datetime.now())
-        #host_name = socket.gethostname()
-        #this_user = os.getlogin()
-        #prev_container = self.get_prev_container()
-        #docker_path = str(self.location)
-        #docker_version = self.get_docker_version()
-        #hash = random.getrandbits(32)
-        #prev_label = self.get_label()
-        #print "hash value: %08x" % hash
-        #subprocess.Popen(cmd_string, shell=True, stdin=None, stdout=None, stderr=None, close_fds=True)
-        #time.sleep(1)
-        #container_id = self.get_containerID(image_name)
-        #print 'CID:' + container_id
-        #print 'commit'
+# image_name = cmd_string.rsplit(' ', 1) [1]
+# image_id = self.get_imageID(image_name)
+# self.set_image(image_id)
+# label = self.get_label()
+# run_time = str(datetime.datetime.now())
+# host_name = socket.gethostname()
+# this_user = os.getlogin()
+# prev_container = self.get_prev_container()
+# docker_path = str(self.location)
+# docker_version = self.get_docker_version()
+# hash = random.getrandbits(32)
+# prev_label = self.get_label()
+# print "hash value: %08x" % hash
+# subprocess.Popen(cmd_string, shell=True, stdin=None,
+# stdout=None, stderr=None, close_fds=True)
+# time.sleep(1)
+# container_id = self.get_containerID(image_name)
+# print 'CID:' + container_id
+# print 'commit'
 
 
 # Generate URI's for docker instance
@@ -80,21 +80,27 @@ dockerActivityuuid = str(uuid.uuid4())
 dockerUseruuid = str(uuid.uuid4())
 
 # Add entity triples first
-ds.add( (UUIDNS[dockerEntityuuid], RDF.type, PROV.Entity) )
-ds.add( (UUIDNS[dockerEntityuuid], RDF.type, DOCKER.Entity) )
-ds.add( (UUIDNS[dockerEntityuuid], PROV.wasGeneratedBy, UUIDNS[dockerActivityuuid]) )
-ds.add( (UUIDNS[dockerEntityuuid], DOCKER.hasImageID, Literal("ImageIDString")))
+ds.add((UUIDNS[dockerEntityuuid], RDF.type, PROV.Entity))
+ds.add((UUIDNS[dockerEntityuuid], RDF.type, DOCKER.Entity))
+ds.add((UUIDNS[dockerEntityuuid], PROV.wasGeneratedBy,
+        UUIDNS[dockerActivityuuid]))
+ds.add((UUIDNS[dockerEntityuuid], DOCKER.hasImageID, Literal("ImageIDString")))
 
 # Add activity triples next including computational activity.
-ds.add( (UUIDNS[dockerActivityuuid], RDF.type, PROV.Activity) )
-ds.add( (UUIDNS[dockerActivityuuid], RDF.type, CA.compuatationalActivity))
+ds.add((UUIDNS[dockerActivityuuid], RDF.type, PROV.Activity))
+ds.add((UUIDNS[dockerActivityuuid], RDF.type, CA.compuatationalActivity))
 # Need sublcass of docker related activities
-ds.add( (UUIDNS[dockerActivityuuid], RDF.type, DOCKER.commitActivity))
-ds.add( (UUIDNS[dockerActivityuuid], DOCKER.hasCommand, DOCKER.commitOperation))
-ds.add( (UUIDNS[dockerActivityuuid], DOCKER.hasContainerID, Literal("blahID")))
-ds.add( (UUIDNS[dockerActivityuuid], DOCKER.hasContainerTag, Literal("GreatContainer")))
-ds.add( (UUIDNS[dockerActivityuuid], PROV.startedAtTime, Literal("2015-11-10T01:30:00Z", datatype=XSD.dateTime)))
-ds.add( (UUIDNS[dockerActivityuuid], PROV.endedAtTime, Literal("2015-11-10T03:40:00Z", datatype=XSD.dateTime)))
+ds.add((UUIDNS[dockerActivityuuid], RDF.type, DOCKER.commitActivity))
+ds.add((UUIDNS[dockerActivityuuid], DOCKER.hasCommand, DOCKER.commitOperation))
+ds.add((UUIDNS[dockerActivityuuid], DOCKER.hasContainerID, Literal("blahID")))
+ds.add((UUIDNS[dockerActivityuuid],
+        DOCKER.hasContainerTag, Literal("GreatContainer")))
+ds.add((UUIDNS[dockerActivityuuid],
+        PROV.startedAtTime, Literal("2015-11-10T01:30:00Z",
+                                    datatype=XSD.dateTime)))
+ds.add((UUIDNS[dockerActivityuuid],
+        PROV.endedAtTime, Literal("2015-11-10T03:40:00Z",
+                                  datatype=XSD.dateTime)))
 
 
 # For a provisioning activity, we need the docker workflow in doing the previsioning plus
@@ -108,9 +114,9 @@ ds.add( (UUIDNS[dockerActivityuuid], PROV.endedAtTime, Literal("2015-11-10T03:40
 
 
 # Add agent info last. Docker is a software agent actingOnBelhalfof
-ds.add( (SC.sc, RDF.type, PROV.SoftwareAgent ) )
-ds.add( (SC.sc, SC.hasVersion, Literal("0.0.1")))
-ds.add( (DOCKER.docker, PROV.actedOnBehalfOf, SC.sc ) )
+ds.add((SC.sc, RDF.type, PROV.SoftwareAgent ))
+ds.add((SC.sc, SC.hasVersion, Literal("0.0.1")))
+ds.add((DOCKER.docker, PROV.actedOnBehalfOf, SC.sc ))
 ds.add( (DOCKER.docker, RDF.type, PROV.SoftwareAgent ) )
 ds.add( (DOCKER.docker, RDFS.label, Literal("Docker: https://www.docker.com/")))
 ds.add( (DOCKER.docker, RDFS.seeAlso, URIRef(u"https://www.docker.com/")))

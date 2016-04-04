@@ -1,0 +1,31 @@
+
+{
+    "@context": "https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld",
+    "@type": "Code",
+    "author": [
+        {
+            "@id": "http://orcid.org/0000-0003-4091-6059/",
+            "@type": "Person",
+            "email": "cvardema@nd.edu",
+            "name": "Charles F Vardeman II",
+            "affiliation": "University of Notre Dame"
+        }
+    ],
+    "identifier": "http://dx.doi.org/10.6084/m9.figshare.828487",
+    "codeRepository": "https://github.com/crcresearch/smartcontainers",
+    "datePublished": "2016-03-30",
+    "dateModified": "2016-03-30",
+    "dateCreated": "2016-03-30",
+    "description": "SmartContainers provide provide provenance of the computational environment inside docker container.",
+    "keywords": "publishing, DOI, credit for code, software preservation",
+    "license": "http://opensource.org/licenses/Apache2",
+    "title": "SmartContainers, a software and data preservation tool using on Docker Containers",
+    "version": "0.0.5",
+    "uploadedBy":
+        {
+            "@id": "http://orcid.org/0000-0003-4091-6059/",
+            "@type": "Person",
+            "email": "cvardema@nd.edu",
+            "name": "Charles F Vardeman II"
+        }
+}
