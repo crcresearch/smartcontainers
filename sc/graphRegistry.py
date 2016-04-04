@@ -54,6 +54,6 @@ class VocabularyRegistry(object):
         pass
 
 # Create instances of registry and register vocabularies
-scVocabRegistry = VocabularyRegistry()
-scProvVocab = provVocabulary.provVocabulary()
-VocabularyRegistry.register(scProvVocab)
+# scVocabRegistry = VocabularyRegistry()
+# scProvVocab = provVocabulary.provVocabulary()
+# VocabularyRegistry.register(scProvVocab)
