@@ -17,6 +17,7 @@ import os
 import scMetadata
 import tempfile
 import tarfile
+import buildProcessor
 
 
 class scClient(docker.Client):
@@ -81,8 +82,14 @@ class scClient(docker.Client):
 
         """
         # path or fileobj must exist. If not, we should abort
-
         # Build Metadata
+        # Instanciate the build processor
+        BP = buildProcessor.buildProcessor()
+        # path or fileobj must exist. If not, we let the docker-py interface handle any error reporting
+        if kwargs['path'] != None:
+            BP.processDF(kwargs['path'])
+        elif kwargs['fileobj'] != None:
+            BP.processFO(kwargs['fileobj'])
 
         # Execute the build
         generator = super(scClient, self).build(*args,  **kwargs)
