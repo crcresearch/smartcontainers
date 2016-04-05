@@ -3,7 +3,7 @@ MAINTAINER Kimbro Staken
 
 LABEL description="This text illustrates \
 that label-values can span multiple lines. \
-And be a real pain!"
+And be a real pain!" test="test_one" "two"="three" "empty"=""
 
 RUN apt-get install -y python-software-properties python
 RUN add-apt-repository ppa:chris-lea/node.js
@@ -14,5 +14,8 @@ RUN npm install -g docpad@6.44
 
 EXPOSE 80
 EXPOSE 5432 443
+
+ADD Dockerfile.txt /
+ADD ["test.txt", "Dockerfile.txt", "/"]
 
 CMD ["/bin/bash"]

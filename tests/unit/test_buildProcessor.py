@@ -90,3 +90,12 @@ class BuildProcessorTestCase(unittest.TestCase):
         self.assertEqual(from_data_two["string"], "ubuntu:14.04")
         self.assertEqual(from_data_two["image"], "ubuntu")
         self.assertEqual(from_data_two["tag"], "14.04")
+
+    def test_parse_label(self):
+        data_label = self.data_one["label"]
+        description = "This text illustrates that label-values can span multiple lines. And be a real pain!"
+
+        self.assertIn("description", data_label)
+        self.assertEqual(data_label["description"], description)
+        self.assertIn("empty", data_label)
+        self.assertEqual(data_label["empty"], "")

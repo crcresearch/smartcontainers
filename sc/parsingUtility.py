@@ -1,4 +1,5 @@
 import json
+import re
 
 
 RUN_ARGS = ["apt-get", "yum", "pip", "git"]
@@ -135,8 +136,18 @@ class parsingUtility:
     def parseCMD(self,cmdCMD):
         pass
 
-    def parseLABEL(self, cmdLABEL):
-        pass
+    def parseLABEL(self, data):
+        if "label" not in self.data:
+            self.data["label"] = {}
+
+        key_pair_pattern_string = "\"?\w*\"?=\".*?\""
+        key_pair_pattern = re.compile(key_pair_pattern_string)
+
+        labels = key_pair_pattern.findall(data)
+        for label in labels:
+            key, value = tuple([split_part.replace("\"", "") for split_part in label.split("=")])
+
+            self.data["label"][key] = value
 
     def parseEXPOSE(self, data):
         if "expose" not in self.data:
