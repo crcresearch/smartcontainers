@@ -8,22 +8,11 @@ import rdflib
 import baseVocabulary
 import provVocabulary
 
-#  Create a default dataset graph.
-# ds = Dataset(default_union=True)
-
-# J SON-LD serializer requires an explicit context.
-#  https://github.com/RDFLib/rdflib-jsonld
-#  context = {"@vocab": "http://purl.org/dc/terms/", "@language": "en"}
-
-context = {"prov": "http://www.w3.org/ns/prov#",
-           "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-           "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-           "xsd": "http://www.w3.org/2001/XMLSchema#",
-           "dc": "http://purl.org/dc/terms"}
 
 class VocabularyRegistry(object):
 
     REGISTRY = {}
+    global_context = {}
     built = False
     global_graph = rdflib.Dataset(default_union=True)
     def __init__(self):
@@ -45,13 +34,26 @@ class VocabularyRegistry(object):
                 print self.REGISTRY[k]
                 self.REGISTRY[k].build()
                 self.global_graph += self.REGISTRY[k].graph
+                self.global_context.update(self.REGISTRY[k].context)
             self.built = True
 
     @classmethod
     def get_json_ld(self):
         if not self.built:
             self.build_graph()
-        pass
+        return self.global_graph.serialize(
+            format='json-ld', context=self.global_context)
+
+    @classmethod
+    def get_turtle(self):
+        if not self.built:
+            self.build_graph()
+        return self.global_graph.serialize(format='turtle')
+
+    @classmethod
+    def add_context(self, key, value):
+        if key not in self.context:
+            self.global_context[key] = value
 
 # Create instances of registry and register vocabularies
 # scVocabRegistry = VocabularyRegistry()
