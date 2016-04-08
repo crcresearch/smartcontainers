@@ -15,7 +15,6 @@ def test_sc():
     """Test SC command execution."""
     result = run_cmd("sc")
     assert 'Usage:' in result
-    print result
 
 
 def run_cmd(cmd):
