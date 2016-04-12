@@ -15,11 +15,11 @@ RUN npm install -g docpad@6.44
 EXPOSE 80
 EXPOSE 5432 443
 
-ADD Dockerfile.txt /
-ADD ["test.txt", "Dockerfile.txt", "/"]
+ADD Dockerfile /
+ADD ["test.txt", "Dockerfile", "/"]
 
-COPY Dockerfile.txt /
-COPY ["test.txt", "Dockerfile.txt", "/"]
+COPY Dockerfile /
+COPY ["test.txt", "Dockerfile", "/"]
 
 VOLUME /testvol /test2vol
 VOLUME ["/test1vol", "/test2vol", "/test3vol"]
