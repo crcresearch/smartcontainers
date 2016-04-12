@@ -146,7 +146,6 @@ class VocabularyRegistry(object):
 
         """
         self.global_graph.parse(data=existing_graph, format='turtle')
-        pass
 
 # Create instances of registry and register vocabularies
 # scVocabRegistry = VocabularyRegistry()
