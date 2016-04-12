@@ -17,6 +17,7 @@ a named graph for each docker state change (build, commit, run). Provenance
 import rdflib
 from rdflib import URIRef
 import baseVocabulary
+import provVocabulary
 
 
 class VocabularyRegistry(object):
@@ -148,6 +149,6 @@ class VocabularyRegistry(object):
         self.global_graph.parse(data=existing_graph, format='turtle')
 
 # Create instances of registry and register vocabularies
-# scVocabRegistry = VocabularyRegistry()
-# scProvVocab = provVocabulary.provVocabulary()
-# VocabularyRegistry.register(scProvVocab)
+scVocabRegistry = VocabularyRegistry()
+scProvVocab = provVocabulary.provVocabulary()
+VocabularyRegistry.register(scProvVocab)
