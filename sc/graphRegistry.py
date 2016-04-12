@@ -45,7 +45,7 @@ class VocabularyRegistry(object):
     def get_registry(self):
         """get_registry: Returns the dictionary of all registered vocbularies.
 
-        All of the vocabularies in the graphRegistry store their
+        All of the vocabularies in the graphRegistry store
         their instances in the REGISTRY dictionary. This provides an access
         function for the dictionary.
 
