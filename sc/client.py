@@ -81,18 +81,25 @@ class scClient(docker.Client):
         Returns: Nothing.
 
         """
-        # path or fileobj must exist. If not, we should abort
         # Build Metadata
         # Instanciate the build processor
         BP = buildProcessor.buildProcessor()
+
         # path or fileobj must exist. If not, we let the docker-py interface handle any error reporting
-        if kwargs['path'] != None:
+        if "path" in kwargs and kwargs['path'] != None:
             BP.processDF(kwargs['path'])
-        elif kwargs['fileobj'] != None:
+        elif "fileobj" in kwargs and kwargs['fileobj'] != None:
             BP.processFO(kwargs['fileobj'])
 
-        # Execute the build
-        generator = super(scClient, self).build(*args,  **kwargs)
+        try:
+            # Execute the build
+            generator = super(scClient, self).build(*args,  **kwargs)
+        except TypeError:
+            raise
+        else:
+            response = [line for line in generator]
+
+            print response
 
     def put_label_image(self, image, label, *args, **kwargs):
         """Write a new label to a new image.
