@@ -51,6 +51,10 @@ coverage.xml
 docs/_build/
 _static
 _templates
+modules.rst
+sc.rst
+setup.rst
+tests.rst
 
 # PyBuilder
 target/
