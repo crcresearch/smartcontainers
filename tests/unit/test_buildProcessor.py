@@ -22,7 +22,7 @@ class BuildProcessorTestCase(unittest.TestCase):
         self.results = []
 
         self.results.append(self.processors[0].processDF(os.path.join(
-            base_dir, 'data/Dockerfile.txt')))
+            base_dir, 'data/Dockerfile')))
 
         self.results.append(self.processors[1].processDF(os.path.join(
             base_dir, 'data/openmalaria/Dockerfile')))
@@ -106,14 +106,14 @@ class BuildProcessorTestCase(unittest.TestCase):
         self.assertIn("dest", data_add[0])
         self.assertEqual(data_add[0]["dest"], "/")
         self.assertIn("src", data_add[1])
-        self.assertEqual(data_add[1]["src"][1], "Dockerfile.txt")
+        self.assertEqual(data_add[1]["src"][1], "Dockerfile")
 
     def test_parse_copy(self):
         data_copy = self.data_one["copy"]
         self.assertIn("dest", data_copy[0])
         self.assertEqual(data_copy[0]["dest"], "/")
         self.assertIn("src", data_copy[1])
-        self.assertEqual(data_copy[1]["src"][1], "Dockerfile.txt")
+        self.assertEqual(data_copy[1]["src"][1], "Dockerfile")
 
     def test_parse_volume(self):
         self.assertEqual(self.data_one["volume"][1], "/test2vol")
