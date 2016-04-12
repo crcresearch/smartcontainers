@@ -91,6 +91,7 @@ class scClient(docker.Client):
         elif "fileobj" in kwargs and kwargs['fileobj'] != None:
             BP.processFO(kwargs['fileobj'])
 
+        generator = None
         try:
             # Execute the build
             generator = super(scClient, self).build(*args,  **kwargs)
@@ -100,7 +101,6 @@ class scClient(docker.Client):
             response = [line for line in generator]
 
             print response
-
         finally:
             if "fileobj" in kwargs:
                 kwargs["fileobj"].close()

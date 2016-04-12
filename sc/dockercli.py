@@ -10,6 +10,7 @@ to be processed for provenance.
 """
 from __future__ import unicode_literals
 from util import which
+import getopt
 import os
 import os.path
 import requests
@@ -246,8 +247,15 @@ class DockerCli:
         for name in snarf_docker_commands:
             if name in command:
                 if name == 'build':
-                    # self.capture_cmd_build(cmd_string)
                     capture_flag = True
+                    build_args = self.capture_cmd_build(cmd_string)
+                    try:
+                        self.dcli.build(**build_args)
+                    except TypeError as error:
+                        # Did not pass a path/fileobj.
+                        # Run native docker build command
+                        #  (probably a --help, or similar).
+                        capture_flag = False
                 elif name == 'commit':
                     self.capture_cmd_commit(cmd_string)
                     capture_flag = True
@@ -271,6 +279,107 @@ class DockerCli:
         """
         print cmd_string
         pass
+
+    # Native docker to docker-py options.
+    option_mapping = {
+        "quiet": "quiet",
+        "q": "quiet",
+        "no-cache": "nocache",
+        "pull": "pull",
+        "rm": "rm",
+        "force-rm": "forcerm",
+        "cpu-shares": "container_limits",
+        "cpuset-cpus": "container_limits",
+        "memory": "container_limits",
+        "memory-swap": "container_limits",
+    }
+    # Default values for some options.
+    value_mapping = {
+        "quiet": True,
+        "nocache": True,
+        "pull": True,
+        "forcerm": True,
+        "container_limits": {},
+        "rm": True
+    }
+    # Native docker to docker-py container limits.
+    container_limits_mapping = {
+        "cpu-shares": "cpushares",
+        "cpuset-cpus": "cpusetcpus",
+        "memory": "memory",
+        "memory-swap": "memswap",
+    }
+    arg_short_options = ["f", "m", "t"]
+    no_arg_short_options = ["h", "q"]
+    arg_long_options = ["build-arg", "cgroup-parent", "cpu-shares",
+        "cpu-period", "cpu-quota", "cpuset-cpus", "cpuset-mems",
+        "disable-content-trust", "file", "isolation", "label", "memory",
+        "memory-swap", "shm-size", "rm", "tag", "ulimit"]
+    no_arg_long_options = ["force-rm", "help", "no-cache", "pull", "quiet"]
+
+    def capture_cmd_build(self, command):
+        """Captures and parses the native docker build command.
+
+        Args:
+            command (str): String containing 'build' and options.
+
+        Returns:
+            (dict): Build data to pass to docker-py.
+
+        """
+        short_options = "".join([option + ":" for option in self.arg_short_options])
+        long_options = [option + "=" for option in self.arg_long_options]
+
+        short_options += "".join(self.no_arg_short_options)
+        long_options.extend(self.no_arg_long_options)
+
+        command_arguments = command.split()[2:]  # Ignore 'docker' and 'build'.
+        try:
+            opts, args = getopt.gnu_getopt(command_arguments, short_options,
+                                           long_options)
+        except getopt.GetoptError as error:
+            print str(error)
+            raise error
+
+        short_options = self.arg_short_options + self.no_arg_short_options
+        long_options = self.arg_long_options + self.no_arg_long_options
+        data = {}
+
+        # Need to have a valid path to a Dockerfile.
+        if args != None and len(args) > 0 and os.path.isdir(args[0]):
+            data["path"] = args[0]
+        else:
+            return data
+
+        # Parse out the build options and arguments.
+        for o, a in opts:
+            option = o.replace("-", "", 2)
+            if option in self.option_mapping:
+                option_value = self.option_mapping[option]
+
+                if option_value not in self.value_mapping:
+                    continue
+
+                if option in short_options:
+                    data[option_value] = self.value_mapping[option_value]
+                elif option in long_options:
+                    if type(self.value_mapping[option_value]) == dict:
+                        if option_value not in data:
+                            data[option_value] = {}
+
+                        argument = a
+                        inner_arg = self.container_limits_mapping[option]
+                        if inner_arg != "cpusetcpus":
+                            argument = int(argument)
+                        data[option_value][inner_arg] = argument
+                    else:
+                        data[option_value] = self.value_mapping[option_value]
+            elif option == "file" or option == "f":
+                file_obj = open(a)
+                data["fileobj"] = file_obj
+                del data["path"]
+
+        return data
 
     def ver_tuple(self, z):
         """ver_tuple: Version Tuple.
