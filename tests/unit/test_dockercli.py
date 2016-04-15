@@ -13,6 +13,8 @@ import pytest
 import os
 from sys import platform as _platform
 
+from sc import dockercli
+
 
 # Test code that discovers docker command
 # This is a bad hack right now
@@ -20,8 +22,6 @@ from sys import platform as _platform
 # http://holgerkrekel.net/2009/03/03/monkeypatching-in-unit-tests-done-right/
 def test_DockerCli():
     """Test DockerCli docker initializetion."""
-    from sc import dockercli
-
     oldenv = os.environ.copy()
     # Test location first
     oldpath = os.environ["PATH"]
@@ -43,49 +43,43 @@ def test_DockerCli():
     assert dockertester3.location is not None
 
 
-def test_check_docker_connection():
-    """Test that docker returns something useful."""
-    from sc import dockercli
-    dockertester = dockercli.DockerCli()
-    dockertester.check_docker_connection()
+class TestDockerCli:
+    """Test docker commands."""
 
+    @classmethod
+    def setup_class(cls):
+        cls.docker_cli = dockercli.DockerCli()
 
-def test_docker_version():
-    """Test docker version tester works for an incorrect version."""
-    from sc import dockercli
-    with pytest.raises(dockercli.DockerInsuficientVersionError):
-        # This will fail if docker ever gets to version 100
-        dockertester = dockercli.DockerCli()
-        dockertester.check_docker_version("100.100.100")
+    def test_check_docker_connection(self):
+        """Test that docker returns something useful."""
+        self.docker_cli.check_docker_connection()
 
+    def test_docker_version(self):
+        """Test docker version tester works for an incorrect version."""
+        with pytest.raises(dockercli.DockerInsuficientVersionError):
+            # This will fail if docker ever gets to version 100
+            self.docker_cli.check_docker_version("100.100.100")
 
-# This test should pass through since we don't capture the
-# provenance of help.
-def test_do_command_simple():
-    """Test simple docker command to pass through."""
-    from sc import dockercli
-    dockertester = dockercli.DockerCli()
-    dockertester.do_command('--help')
+    # This test should pass through since we don't capture the
+    # provenance of help.
+    def test_do_command_simple(self):
+        """Test simple docker command to pass through."""
+        self.docker_cli.do_command('--help')
 
+    def test_do_command_commit(self, createClient, pull_docker_image):
+        """TODO: Docstring for test_do_command_commit.
 
-def test_do_command_commit(createClient, pull_docker_image):
-    """TODO: Docstring for test_do_command_commit.
+        Returns: TODO
 
-    Returns: TODO
+        """
+        newContainer = createClient.create_container(image=pull_docker_image,
+                                                     command="/bin/sh", tty=True)
+        ContainerID = str(newContainer['Id'])
+        createClient.start(ContainerID)
+        cmd_str = 'commit ' + ContainerID
+        self.docker_cli.do_command(cmd_str)
+        createClient.stop(ContainerID)
+        createClient.remove_container(ContainerID)
 
-    """
-    from sc import dockercli
-    dockertester = dockercli.DockerCli()
-    newContainer = createClient.create_container(image=pull_docker_image,
-                                                 command="/bin/sh", tty=True)
-    ContainerID = str(newContainer['Id'])
-    createClient.start(ContainerID)
-    cmd_str = 'commit ' + ContainerID
-    dockertester.do_command(cmd_str)
-    createClient.stop(ContainerID)
-    createClient.remove_container(ContainerID)
-
-# def test_do_command_run():
-#    from sc import dockercli
-#    dockertester = dockercli.DockerCli('run /usr/bin/uname')
-#    dockertester.do_command()
+    # def test_do_command_run(self):
+    #    self.docker_cli.do_command()
