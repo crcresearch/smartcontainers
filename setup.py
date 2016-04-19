@@ -40,7 +40,7 @@ class Tox(TestCommand):
 
 
 dependencies = ['click==4.1', 'rdflib', 'rdflib-jsonld',
-                'orcidfind', 'pyparsing', 'pytz', 'requests==2.7.0', 'docker-py']
+                'orcid', 'pyparsing', 'pytz', 'requests==2.7.0', 'docker-py']
 
 setup(
     name='smartcontainers',

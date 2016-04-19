@@ -70,7 +70,7 @@ def search(image):
 @click.argument('image')
 def printlabel(image):
     """Print Metadata label from container."""
-    processdocker = DockerCli("info") 
+    processdocker = DockerCli("info")
     this_label = processdocker.get_label(image)
     print this_label
 
@@ -125,10 +125,12 @@ def orcid(i, e):
 def config_by_search():
     """Create a RDF Graph configuration file by searching for Orcid user."""
     orcid_profile = orcid_search(sandbox=False)
-    turtle_data = orcid_profile.get_turtle()
-    config_file = ConfigManager()
-    config_file.get_config(_id=orcid_profile.orcid_id, _data=turtle_data)
-    config_file.write_config()
+    if orcid_profile is not None:
+        orcid_manager = OrcidManager(sandbox=False, orcid_id=orcid_profile)
+        turtle_data = orcid_manager.get_turtle()
+        config_file = ConfigManager()
+        config_file.config_obj = turtle_data
+        config_file.write_config()
 
 
 def config_by_id(orcid_id):
