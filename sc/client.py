@@ -101,6 +101,10 @@ class scClient(docker.Client):
 
             print response
 
+        finally:
+            if "fileobj" in kwargs:
+                kwargs["fileobj"].close()
+
     def put_label_image(self, image, label, *args, **kwargs):
         """Write a new label to a new image.
 
