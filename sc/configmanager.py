@@ -2,6 +2,7 @@
 
 import simplejson as json
 import os
+import rdflib
 
 __author__ = 'cwilli34'
 
@@ -22,6 +23,7 @@ class ConfigManager(object):
         -------
         :returns: none
         """
+        self.graph = rdflib.Graph()
         self.filename = filename
 
         if os.environ.get('SC_HOME'):
@@ -89,6 +91,7 @@ class ConfigManager(object):
                 contents = ctgfile.read()
                 self.config_object = contents
                 ctgfile.close()
+                self.graph.parse(data=self.config_object, format='n3')
                 message = 'File was read successfully.'
                 return message
             except:
