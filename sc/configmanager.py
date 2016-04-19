@@ -30,8 +30,6 @@ class ConfigManager(object):
             os.environ['SC_HOME'] = os.environ['HOME'] + '/.sc/'
             self.config_path = os.getenv('SC_HOME')
 
-        self.config_obj = dict
-
     def write_config(self):
         """Write the configuration file
            Writes the configuration file to the SC directory, or program home directory
@@ -53,8 +51,8 @@ class ConfigManager(object):
             ctgfile = open(self.config_path + self.filename, 'w')
 
         try:
-            # ctgfile.write(str(self.config_obj))
-            ctgfile.write(json.dumps(self.config_obj, indent=4, sort_keys=True))
+            ctgfile.write(str(self.config_obj))
+            # ctgfile.write(json.dumps(self.config_obj, indent=4, sort_keys=True))
             ctgfile.close()
             print('The configuration file has been created.')
         except:
@@ -99,30 +97,3 @@ class ConfigManager(object):
                 ctgfile.close()
                 message = 'File could not be read.  Please try again.'
                 return message
-
-    # def get_config(self, _query=None, _id=None, _email=None, sandbox=True):
-    def get_config(self, _id, _data):
-        """Gets the configuration data to send to the write function
-
-        Parameters
-        ----------
-        :param sandbox: boolean Should the sandbox be used. True (default) indicates development mode.
-        :param _email: string If an email has been passed, then the email will be searched for using
-            OrcidSearchResults(), an Orcid ID will be found and returned.
-        :param _id: string If a config_id has been passed, then self.config_id = _id and returned.
-
-        Returns
-        -------
-        :returns config_obj: string
-            Returns the config_id
-        """
-        # config = OrcidManager(query=_query, orcid_id=_id, orcid_email=_email, sandbox=sandbox)
-        # config_id = config.orcid_id
-        # turtle_data = config.get_turtle()
-
-        self.config_obj = {
-            'orcid-id': _id,
-            'turtle-profile': _data
-        }
-
-        return self.config_obj

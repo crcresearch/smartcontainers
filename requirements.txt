@@ -7,7 +7,7 @@ html5lib==0.999999
 isodate==0.5.1
 Jinja2==2.8
 MarkupSafe==0.23
-orcid==0.5.1
+orcid
 orcidfind==0.1a.6
 pprintpp==0.2.3
 py==1.4.30
