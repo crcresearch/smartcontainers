@@ -87,9 +87,7 @@ class ConfigManager(object):
             # Variable data is not used (This is for customizing the script later for future configuration).
             try:
                 contents = ctgfile.read()
-                contents = json.loads(contents)
-                print(contents.get('orcid-id'))
-                print(contents.get('turtle-profile'))
+                self.config_object = contents
                 ctgfile.close()
                 message = 'File was read successfully.'
                 return message

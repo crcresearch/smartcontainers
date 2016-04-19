@@ -17,6 +17,8 @@ class Settings(object):
         self.debug = debug
 
 
+config_file = ConfigManager()
+
 @click.group()
 @click.version_option()
 def cli():
@@ -29,7 +31,9 @@ def cli():
     the state of the container is recorded in a prov graph and attached to the resultant
     image.
     """
-    pass
+    result = config_file.read_config()
+    if result is not "":
+        print(result)
 
 
 @cli.group()
