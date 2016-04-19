@@ -16,7 +16,7 @@ class Settings(object):
         self.home = os.path.abspath(home or '.')
         self.debug = debug
 
-
+graph = rdflib.Graph()
 config_file = ConfigManager()
 
 @click.group()
@@ -34,6 +34,7 @@ def cli():
     result = config_file.read_config()
     if result is not "":
         print(result)
+    graph = result.graph
 
 
 @cli.group()
