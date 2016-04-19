@@ -1,5 +1,9 @@
 import click
 import os
+import rdflib
+from rdflib import Literal, Namespace
+from rdflib.namespace import FOAF
+import uuid
 from configmanager import ConfigManager
 from orcidmanager import OrcidManager
 from orcidprofilesearch import orcid_search
@@ -31,10 +35,43 @@ def cli():
     the state of the container is recorded in a prov graph and attached to the resultant
     image.
     """
-    result = config_file.read_config()
-    if result is not "":
-        print(result)
-    graph = result.graph
+    Success = False
+    while not Success:
+        result = config_file.read_config()
+        if 'Configuration does not exist.' in result:
+            print("User configuration needs to be initialized")
+            selected = None
+            while not selected:
+                try:
+                    selected = click.prompt('Do you have an ORCID profile (Y/N)')
+                    if selected.lower() == 'y' or selected.lower() == 'yes':
+                        config_by_search()
+                        continue
+
+                    if selected.lower() == 'n' or selected.lower() == 'no':
+                        print("Please provide some basic information:")
+                        query = {
+                            'first_name': click.prompt(
+                                'Please enter a first name', default='',
+                                show_default=False
+                            ),
+                            'last_name': click.prompt(
+                                'Please enter a last name', default='',
+                                show_default=False
+                            )
+                        }
+                        dockerUseruuid = str(uuid.uuid4())
+                        UUIDNS = Namespace("urn:uuid:")
+                        config_file.graph.add( ( UUIDNS[dockerUseruuid], FOAF.givenName, Literal(query['first_name']) ) )
+                        config_file.graph.add( ( UUIDNS[dockerUseruuid], FOAF.familyName, Literal(query['last_name']) ) )
+
+                        config_file.config_obj = config_file.graph.serialize(format='turtle')
+                        config_file.write_config()
+                except KeyError:
+                    print('That is not a valid selection.  Please try again.\n')
+        else:
+            Success = True
+            graph = config_file.graph
 
 
 @cli.group()

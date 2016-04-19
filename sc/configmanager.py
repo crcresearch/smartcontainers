@@ -74,27 +74,21 @@ class ConfigManager(object):
         :returns message: string
             If the configuration file does not exist, return error string
         """
-        # g = rdflib.Graph()
         if not os.path.exists(self.config_path):
             # If the directory does not exist, we cannot read it.
-            message = 'Directory does not exist. Cannot read file.'
-            return message
+            return 'Configuration does not exist.'
         elif not os.path.exists(self.config_path + self.filename):
             # If the file does not exist, we cannot read it.
-            message = 'File does not exist. Cannot read file.'
-            return message
+            return 'Configuration does not exist.'
         else:
             # Open existing file, read and write
             ctgfile = open(self.config_path + self.filename, 'r')
-            # Variable data is not used (This is for customizing the script later for future configuration).
             try:
                 contents = ctgfile.read()
                 self.config_object = contents
                 ctgfile.close()
                 self.graph.parse(data=self.config_object, format='n3')
-                message = 'File was read successfully.'
-                return message
+                return ''
             except:
                 ctgfile.close()
-                message = 'File could not be read.  Please try again.'
-                return message
+                return 'Configration could not be read or parsed correctly'
