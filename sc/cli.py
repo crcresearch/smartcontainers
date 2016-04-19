@@ -62,6 +62,7 @@ def cli():
                         }
                         dockerUseruuid = str(uuid.uuid4())
                         UUIDNS = Namespace("urn:uuid:")
+                        config_file.graph.bind("foaf", FOAF)
                         config_file.graph.add( ( UUIDNS[dockerUseruuid], FOAF.givenName, Literal(query['first_name']) ) )
                         config_file.graph.add( ( UUIDNS[dockerUseruuid], FOAF.familyName, Literal(query['last_name']) ) )
 
