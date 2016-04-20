@@ -5,7 +5,7 @@ LABEL description="This text illustrates \
 that label-values can span multiple lines. \
 And be a real pain!" test="test_one" "two"="three" "empty"=""
 
-RUN apt-get install -y python-software-properties python
+RUN apt-get install -y software-properties-common python
 RUN add-apt-repository ppa:chris-lea/node.js
 RUN echo "deb http://us.archive.ubuntu.com/ubuntu/ precise universe" >> /etc/apt/sources.list
 RUN apt-get update
@@ -16,10 +16,10 @@ EXPOSE 80
 EXPOSE 5432 443
 
 ADD Dockerfile /
-ADD ["test.txt", "Dockerfile", "/"]
+ADD ["Dockerfile", "/"]
 
 COPY Dockerfile /
-COPY ["test.txt", "Dockerfile", "/"]
+COPY ["Dockerfile", "/"]
 
 VOLUME /testvol /test2vol
 VOLUME ["/test1vol", "/test2vol", "/test3vol"]
