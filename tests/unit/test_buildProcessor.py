@@ -66,7 +66,7 @@ class BuildProcessorTestCase(unittest.TestCase):
         self.assertEqual(self.parsers[1].data["maintainer"], second_maintainer)
 
     def test_parse_run(self):
-        parameter_one = "install -y python-software-properties python"
+        parameter_one = "install -y software-properties-common python"
         parameter_two = "cp Schema\ 32/densities.csv "
         parameter_two += "Schema\ 32/autoRegressionParameters.csv "
         parameter_two += "Schema\ 32/scenario_32.xsd /om"
@@ -106,14 +106,14 @@ class BuildProcessorTestCase(unittest.TestCase):
         self.assertIn("dest", data_add[0])
         self.assertEqual(data_add[0]["dest"], "/")
         self.assertIn("src", data_add[1])
-        self.assertEqual(data_add[1]["src"][1], "Dockerfile")
+        self.assertEqual(data_add[1]["src"][0], "Dockerfile")
 
     def test_parse_copy(self):
         data_copy = self.data_one["copy"]
         self.assertIn("dest", data_copy[0])
         self.assertEqual(data_copy[0]["dest"], "/")
         self.assertIn("src", data_copy[1])
-        self.assertEqual(data_copy[1]["src"][1], "Dockerfile")
+        self.assertEqual(data_copy[1]["src"][0], "Dockerfile")
 
     def test_parse_volume(self):
         self.assertEqual(self.data_one["volume"][1], "/test2vol")
