@@ -3,7 +3,7 @@
 
 This module tests that the sc command as setup from setup.py
 executes correctly and returns the help useage. This is meant to
-to be a quick and dirty test to make sure that there isn't a depenency
+be a quick and dirty test to make sure that there isn't a depenency
 version conflict that prevents the command line script wrapper from
 functioning.
 """
