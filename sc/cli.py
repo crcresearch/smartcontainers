@@ -87,16 +87,20 @@ def config(config):
 
 
 # We may have to manually handle --help and pass it to docker
-@cli.command()
-@click.argument('command')
+@cli.command(context_settings=dict(ignore_unknown_options=True))
+@click.argument('command', nargs=-1, type=click.UNPROCESSED)
 def docker(command):
     """Execute a docker command.
     Example: sc docker run <container id>
 
     :param command: string
     """
+    cmd = ""
+    for i in range(len(command)):
+        cmd += command[i] + " "
+
     processdocker = DockerCli()
-    processdocker.do_command(command)
+    processdocker.do_command(cmd)
 
 
 @cli.command()
