@@ -11,9 +11,13 @@ services:
 # command to install dependencies
 install:
     - "pip install tox-travis"
+    - pip install codecov
 
 #run tests
 script:
     - docker version
     - docker info
     - tox
+
+after_success:
+    - codecov
