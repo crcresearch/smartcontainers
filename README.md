@@ -1,4 +1,4 @@
-# SmartContainers (sc) for docker enabled software and data preservation
+# SmartContainers (sc) for docker enabled software and data preservation [![codecov.io](https://codecov.io/github/crcresearch/smartcontainers/coverage.svg?branch=master)](https://codecov.io/github/crcresearch/smartcontainers?branch=master)
 
 SmartContainers is python wrapper for docker that facilitates the recording
 and tracking of provenance information using the W3C recommendation [prov-o](http://www.w3.org/TR/prov-o/).
