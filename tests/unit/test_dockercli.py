@@ -87,6 +87,6 @@ class TestDockerCli:
     def test_do_command_build(self):
         """Test docker build command."""
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        docker_file_path = os.path.join(base_dir, "data/openmalaria/")
+        docker_file_path = os.path.join(base_dir, "data/")
         build_command = 'build {} --cpu-shares 2 --cpuset-cpus 0,1 --rm=true'.format(docker_file_path)
         self.docker_cli.do_command(build_command)
