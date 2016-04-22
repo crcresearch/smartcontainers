@@ -259,12 +259,6 @@ class DockerCli:
                 elif name == 'commit':
                     self.capture_cmd_commit(cmd_string)
                     capture_flag = True
-                elif name == 'run':
-                    # Execute some procedure
-                    capture_flag = True
-                elif name == 'stop':
-                    # Execute some procedure
-                    capture_flag = True
         if not capture_flag:
             subprocess.call(cmd_string, shell=True)
 
