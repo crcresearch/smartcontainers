@@ -39,8 +39,8 @@ class Tox(TestCommand):
 
 
 
-dependencies = ['click==4.1', 'rdflib', 'rdflib-jsonld',
-                'orcid', 'pyparsing', 'pytz', 'requests==2.7.0', 'docker-py']
+dependencies = ['click==4.1', 'rdflib-jsonld', 'orcid', 'pyparsing', 'pytz',
+                'requests', 'docker-py']
 
 setup(
     name='smartcontainers',
@@ -53,9 +53,6 @@ setup(
     long_description=__doc__,
     packages=find_packages(exclude=['tests', 'docs', 'scripts', 'resources']),
     include_package_data=True,
-    dependency_links=[
-        "git+ssh://git@github.com/charlesvardeman/orcidfind/tarball/master#egg=orcidfind"
-    ],
     zip_safe=False,
     platforms='any',
     install_requires=dependencies,
