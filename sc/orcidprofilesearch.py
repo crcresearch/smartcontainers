@@ -1,7 +1,7 @@
 """CLI program that allows the user to input keywords for a basic search of the
     Orcid API.  It uses the OrcidManager class to find the Orcid ID and data.
 """
-
+from requests import RequestException
 import orcid
 import click
 
@@ -42,7 +42,7 @@ def orcid_search(sandbox):
     if query['last_name']:
         if len(search_terms) > 0:
             search_terms += " AND "
-        search_terms += 'family-names:' + query['last_name']
+        search_terms += 'family-name:' + query['last_name']
     if query['email']:
         if len(search_terms) > 0:
             search_terms += " AND "
@@ -53,12 +53,20 @@ def orcid_search(sandbox):
         search_terms += query['keywords']
 
     api = orcid.SearchAPI(False)
-    results = api.search_public(search_terms).get('orcid-search-results', None)
-    if results is None:
-        return ""
+    try:
+        results = api.search_public(search_terms).get(
+            'orcid-search-results', None)
+    except RequestException as e:
+    # Here the error should be handled. As the exception message might be
+    # too generic, additional info can be obtained by:
+        print(e.response.text)
+    # The response is a requests Response instance.
 
+    print results
+    if results is None:
+        return None
+    if results.get('num-found') == 0:
+        return None
     result = results.get('orcid-search-result', None)
-    if result is None:
-        return ""
 
     return result[0]['orcid-profile']['orcid-identifier']['path']

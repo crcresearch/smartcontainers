@@ -178,6 +178,8 @@ def config_by_search():
         config_file = ConfigManager()
         config_file.config_obj = turtle_data
         config_file.write_config()
+    else:
+        print("Sorry, ORCID returned no resutls for that user information.")
 
 
 def config_by_id(orcid_id):

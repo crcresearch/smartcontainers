@@ -92,3 +92,6 @@ class ConfigManager(object):
             except:
                 ctgfile.close()
                 return 'Configration could not be read or parsed correctly'
+
+configmanager = ConfigManager()
+configmanager.read_config()
