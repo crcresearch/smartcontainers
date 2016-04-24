@@ -62,7 +62,6 @@ def orcid_search(sandbox):
         print(e.response.text)
     # The response is a requests Response instance.
 
-    print results
     if results is None:
         return None
     if results.get('num-found') == 0:
