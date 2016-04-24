@@ -48,6 +48,22 @@ class provVocabulary(baseVocabulary):
                    "xsd": "http://www.w3.org/2001/XMLSchema#",
                    "dc": "http://purl.org/dc/terms"}
 
+        # Define some namespaces
+        PROV = Namespace("http://www.w3.org/ns/prov#")
+        ORE = Namespace("http://www.openarchives.org/ore/terms/")
+        OWL = Namespace("http://www.w3.org/2002/07/owl#")
+        DC = Namespace("http://purl.org/dc/terms/")
+        UUIDNS = Namespace("urn:uuid:")
+        DOCKER = Namespace("http://w3id.org/daspos/docker#")
+        # W3C namespace:
+        POSIX = Namespace("http://www.w3.org/ns/posix/stat#")
+        ACL = Namespace("http://www.w3.org/ns/auth/acl#")
+
+        # DASPOS namespaces
+        SC = Namespace("https://w3id.org/daspos/smartcontainers#")
+        CA = Namespace("https://w3id.org/daspos/computationalactivity#")
+        CE = Namespace("https://w3id.org/daspos/computationalenvironment#")
+
         # Need to handle DOI
         # http://bitwacker.com/2010/02/04/dois-uris-and-cool-resolution/
 
@@ -79,7 +95,6 @@ class provVocabulary(baseVocabulary):
             print s, p, o
         for person in config_graph.subjects(RDF.type, FOAF["Person"]):
             print person
-
     def build_entity(self, ds):
         pass
 
