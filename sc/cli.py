@@ -25,7 +25,8 @@ config_file = ConfigManager()
 
 @click.group()
 @click.version_option()
-def cli():
+@click.pass_context
+def cli(ctx):
     """Smartcontainers for software and data preservation.
     Smartcontainers provides a mechanism to add metadata to Docker
     containers as a JSON-LD label. The metadata is contextualized using
@@ -35,6 +36,11 @@ def cli():
     the state of the container is recorded in a prov graph and attached to the resultant
     image.
     """
+
+    # Ignore config loading if we intend to create an orcid config
+    if ctx.args[0] == "config" and ctx.args[1] == "orcid":
+        return
+
     Success = False
     while not Success:
         result = config_file.read_config()
