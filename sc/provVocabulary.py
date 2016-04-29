@@ -88,13 +88,40 @@ class provVocabulary(baseVocabulary):
 
         # Get configmager object from configmanager.
         config_graph = configmanager.configmanager.graph
+        person_entities = []
+        familyName_entities = []
+        givenName_entities = []
 
-        chuckORIDchuck = URIRef(str(uuid.uuid4()))
-        print "Config graph:"
-        for s, p, o in config_graph:
-            print s, p, o
         for person in config_graph.subjects(RDF.type, FOAF["Person"]):
-            print person
+            person_entities.append(person)
+        # This assumes that the first person property is either the ORCID or SC person identifier
+        if person_entities:
+            orcid_person = URIRef(person_entities[0])
+            # Now find the literals for this URIRef
+            for familyName in config_graph.objects(
+                    orcid_person, FOAF["familyName"]):
+                familyName_entities.append(familyName)
+            if familyName_entities:
+                familyName_literal = rdflib.Literal(familyName_entities[0])
+            for givenName in config_graph.objects(
+                    orcid_person, FOAF["givenName"]):
+                givenName_entities.append(givenName)
+            if givenName_entities:
+                givenName_literal = rdflib.Literal(givenName_entities[0])
+            # Build the triples Now
+            ds.add(( orcid_person, RDF.type, PROV.Person))
+            ds.add(( orcid_person, RDF.type, FOAF.Person))
+            # Add account info from config, this should include ORCID
+            # ds.add(( orcid_person, FOAF.account, chuckORID))
+            # User name and hostname info should go here from docker host or from "Dashboard system"
+            ds.add(( orcid_person, FOAF.account, URIRef("cvardema@ssh://crcfe.crc.nd.edu")))
+            ds.add(( orcid_person, FOAF.givenName, givenName_literal))
+            ds.add(( orcid_person, FOAF.familyName, familyName_literal))
+
+            print ds.serialize(format='turtle')
+
+
+
     def build_entity(self, ds):
         pass
 
