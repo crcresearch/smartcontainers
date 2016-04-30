@@ -33,6 +33,8 @@ CA = Namespace("https://w3id.org/daspos/computationalactivity#")
 CE = Namespace("https://w3id.org/daspos/computationalenvironment#")
 
 dockerUseruuid = str(uuid.uuid4())
+dockerActivityuuid = str(uuid.uuid4())
+dockerEntityuuid = str(uuid.uuid4())
 
 class provVocabulary(baseVocabulary):
 
@@ -82,7 +84,9 @@ class provVocabulary(baseVocabulary):
 
         # Build agent metadata
         self.build_agent(ds)
-
+        self.build_entity(ds)
+        self.build_activity(ds)
+        print ds.serialize(format='turtle')
 
     def build_agent(self, ds):
 
@@ -97,6 +101,7 @@ class provVocabulary(baseVocabulary):
         # This assumes that the first person property is either the ORCID or SC person identifier
         if person_entities:
             orcid_person = URIRef(person_entities[0])
+            orcid_account = URIRef(person_entities[0]+"#orcid-id")
             # Now find the literals for this URIRef
             for familyName in config_graph.objects(
                     orcid_person, FOAF["familyName"]):
@@ -112,18 +117,46 @@ class provVocabulary(baseVocabulary):
             ds.add(( orcid_person, RDF.type, PROV.Person))
             ds.add(( orcid_person, RDF.type, FOAF.Person))
             # Add account info from config, this should include ORCID
-            # ds.add(( orcid_person, FOAF.account, chuckORID))
-            # User name and hostname info should go here from docker host or from "Dashboard system"
-            ds.add(( orcid_person, FOAF.account, URIRef("cvardema@ssh://crcfe.crc.nd.edu")))
+            ds.add(( orcid_person, FOAF.account, orcid_account))
             ds.add(( orcid_person, FOAF.givenName, givenName_literal))
             ds.add(( orcid_person, FOAF.familyName, familyName_literal))
 
-            print ds.serialize(format='turtle')
+        # Add agent info last. Docker is a software agent actingOnBelhalfof
+        ds.add((SC.sc, RDF.type, PROV.SoftwareAgent ))
+        ds.add((SC.sc, SC.hasVersion, Literal("0.0.1")))
+        ds.add((DOCKER.docker, PROV.actedOnBehalfOf, SC.sc ))
+        ds.add( (DOCKER.docker, RDF.type, PROV.SoftwareAgent ) )
+        ds.add( (DOCKER.docker, RDFS.label, Literal("Docker: https://www.docker.com/")))
+        ds.add( (DOCKER.docker, RDFS.seeAlso, URIRef(u"https://www.docker.com/")))
+        # This need to be put somewhere
+        ds.add( (DOCKER.docker, DOCKER.hasVersion, Literal("Docker version 1.9.1, build a34a1d5")))
+        ds.add( (SC.sc, PROV.actedOnBehalfOf, UUIDNS[dockerUseruuid]))
+
+
 
 
 
     def build_entity(self, ds):
-        pass
+        ds.add((UUIDNS[dockerEntityuuid], RDF.type, PROV.Entity))
+        ds.add((UUIDNS[dockerEntityuuid], RDF.type, DOCKER.Entity))
+        ds.add((UUIDNS[dockerEntityuuid], PROV.wasGeneratedBy,
+        UUIDNS[dockerActivityuuid]))
+        ds.add((UUIDNS[dockerEntityuuid], DOCKER.hasImageID, Literal("ImageIDString")))
+
+
 
     def build_activity(self, ds):
-        pass
+        ds.add((UUIDNS[dockerActivityuuid], RDF.type, PROV.Activity))
+        ds.add((UUIDNS[dockerActivityuuid], RDF.type, CA.compuatationalActivity))
+        # Need sublcass of docker related activities
+        ds.add((UUIDNS[dockerActivityuuid], RDF.type, DOCKER.commitActivity))
+        ds.add((UUIDNS[dockerActivityuuid], DOCKER.hasCommand, DOCKER.commitOperation))
+        ds.add((UUIDNS[dockerActivityuuid], DOCKER.hasContainerID, Literal("blahID")))
+        ds.add((UUIDNS[dockerActivityuuid],
+                DOCKER.hasContainerTag, Literal("GreatContainer")))
+        ds.add((UUIDNS[dockerActivityuuid],
+                PROV.startedAtTime, Literal("2015-11-10T01:30:00Z",
+                                            datatype=XSD.dateTime)))
+        ds.add((UUIDNS[dockerActivityuuid],
+                PROV.endedAtTime, Literal("2015-11-10T03:40:00Z",
+                                          datatype=XSD.dateTime)))
