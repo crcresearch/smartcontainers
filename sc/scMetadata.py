@@ -4,7 +4,7 @@
 This module provides an interface for the Client to the metadata
 objects that need to writen to a label or inside of a container.
 """
-import provinator
+import graphRegistry
 import re
 import ast
 
@@ -16,12 +16,12 @@ class scMetadata:
     def appendData(self, filepath):
         # Appends provinator data to the file passed in
         with open(filepath, 'a') as provfile:
-            provfile.write(provinator.get_commit_data())
+            provfile.write(graphRegistry.scVocabRegistry.get_json_ld())
 
     def labelDictionary(self, label_prefix):
         # Returns the label as a dictionary
         # Get the label information from provinator
-        provOutput = provinator.get_commit_label()
+        provOutput = graphRegistry.scVocabRegistry.get_json_ld()
         # Remove any formatting characters
         provOutput = re.sub('[\t\r\n\s+]', '', provOutput)
         # Add the label prefix

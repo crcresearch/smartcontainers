@@ -86,7 +86,7 @@ class provVocabulary(baseVocabulary):
         self.build_agent(ds)
         self.build_entity(ds)
         self.build_activity(ds)
-        print ds.serialize(format='turtle')
+
 
     def build_agent(self, ds):
 
