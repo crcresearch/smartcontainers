@@ -33,10 +33,10 @@ class Vocabulary2(baseVocabulary.baseVocabulary):
 
 def test_create_graph():
     """Create new graphFactory Object"""
-    from sc import graphRegistry
+    from sc import graphManager
 
     PROV = Namespace("http://www.w3.org/ns/prov#")
-    tstregistry = graphRegistry.VocabularyRegistry()
+    tstregistry = graphManager.VocabularyRegistry()
 
     vocab1 = Vocabulary1()
     tstregistry.register(vocab1)
@@ -44,6 +44,7 @@ def test_create_graph():
     tstregistry.register(vocab2)
 
     tstregistry.build_graph()
+    print tstregistry.get_turtle()
     # Check assertions in global graph store
     assert (URIRef("http://orcid.org/000-0003-4901-6059"),
             RDF.type, PROV.Person) in tstregistry.global_graph
