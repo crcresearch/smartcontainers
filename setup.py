@@ -40,7 +40,7 @@ class Tox(TestCommand):
 
 
 dependencies = ['click==4.1', 'rdflib-jsonld', 'orcid', 'pyparsing', 'pytz',
-                'requests', 'docker-py']
+                'requests', 'docker-py', 'py-cpuinfo']
 
 setup(
     name='smartcontainers',

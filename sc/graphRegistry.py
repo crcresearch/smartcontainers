@@ -16,7 +16,11 @@ a named graph for each docker state change (build, commit, run). Provenance
 """
 import graphManager
 import provVocabulary
+import envVocabulary
 # Create instances of registry and register vocabularies
 scVocabRegistry = graphManager.VocabularyRegistry()
 scProvVocab = provVocabulary.provVocabulary()
 scVocabRegistry.register(scProvVocab)
+
+scEnvVocabulary = envVocabulary.envVocabulary()
+scVocabRegistry.register(envVocabulary)
