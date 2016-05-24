@@ -148,8 +148,8 @@ def preserve():
 def infect(image):
     """Provenance should be contagious. Create smartcontainer image from
     existing image. """
-    processdocker = DockerCli("info")
-    processdocker.infect('image')
+    processdocker = DockerCli()
+    processdocker.infect(image)
 
 #  Orcid Commands  ################################
 #  cwilli34
