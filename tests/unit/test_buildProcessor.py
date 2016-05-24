@@ -47,18 +47,6 @@ class BuildProcessorTestCase(unittest.TestCase):
         self.assertEqual(self.parsers[0].steps[0], "FROM ubuntu")
         self.assertEqual(self.parsers[1].steps[2], second_step)
 
-    def test_write_out_data(self):
-        self.parsers[0].write_out_data(os.path.join(base_dir,
-            "data/data1.json"))
-
-        self.parsers[1].write_out_data(os.path.join(base_dir,
-            "data/data2.json"))
-
-        self.assertTrue(os.path.isfile(os.path.join(base_dir,
-            "data/data1.json")))
-        self.assertTrue(os.path.isfile(os.path.join(base_dir,
-            "data/data2.json")))
-
     def test_parse_maintainer(self):
         second_maintainer = "Nicolas Reed <Nicolas.Reed.102 at nd dot edu>"
 
