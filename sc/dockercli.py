@@ -278,6 +278,7 @@ class DockerCli:
     option_mapping = {
         "quiet": "quiet",
         "q": "quiet",
+        "t": "tag",
         "no-cache": "nocache",
         "pull": "pull",
         "rm": "rm",
@@ -292,9 +293,10 @@ class DockerCli:
         "quiet": True,
         "nocache": True,
         "pull": True,
-        "forcerm": True,
+        "forcerm": False,
         "container_limits": {},
-        "rm": True
+        "rm": True,
+        "tag": "",
     }
     # Native docker to docker-py container limits.
     container_limits_mapping = {
@@ -355,7 +357,7 @@ class DockerCli:
                     continue
 
                 if option in short_options:
-                    data[option_value] = self.value_mapping[option_value]
+                    data[option_value] = a
                 elif option in long_options:
                     if type(self.value_mapping[option_value]) == dict:
                         if option_value not in data:
