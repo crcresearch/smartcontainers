@@ -91,6 +91,8 @@ class scClient(docker.Client):
         elif "fileobj" in kwargs and kwargs['fileobj'] != None:
             BP.processFO(kwargs['fileobj'])
 
+        Id = ""
+
         generator = None
         try:
             # Execute the build
@@ -100,7 +102,16 @@ class scClient(docker.Client):
         else:
             response = [line for line in generator]
 
-            print response
+            final_line = response[len(response)-1]
+            fJson = json.loads(final_line)
+            if "Successfully built" in fJson['stream']:
+                Id = fJson['stream'].split(' ')[2].strip()
+
+            for line in super(scClient, self).images():
+                fullID = line['Id'].replace("sha256:", "")
+                if fullID.startswith(Id):
+                    return fullID
+            return ""
         finally:
             if "fileobj" in kwargs:
                 kwargs["fileobj"].close()
