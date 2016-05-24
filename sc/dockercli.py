@@ -250,8 +250,10 @@ class DockerCli:
                     capture_flag = True
                     build_args = self.capture_cmd_build(cmd_string)
                     try:
-                        self.dcli.build(**build_args)
+                        default = self.dcli.build(**build_args)
+                        self.dcli.infect_image(default, **build_args)
                     except TypeError as error:
+                        print(error)
                         # Did not pass a path/fileobj.
                         # Run native docker build command
                         #  (probably a --help, or similar).
