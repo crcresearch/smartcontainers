@@ -66,12 +66,12 @@ class BuildProcessorTestCase(unittest.TestCase):
         self.assertEqual(self.parsers[1].data["maintainer"], second_maintainer)
 
     def test_parse_run(self):
-        parameter_one = "install -y software-properties-common python"
+        parameter_one = "install -y software-properties-common python curl"
         parameter_two = "cp Schema\ 32/densities.csv "
         parameter_two += "Schema\ 32/autoRegressionParameters.csv "
         parameter_two += "Schema\ 32/scenario_32.xsd /om"
 
-        special_command = self.data_one["run"][0]["special"]
+        special_command = self.data_one["run"][1]["special"]
         self.assertIn("apt-get", special_command)
         self.assertEqual(special_command["apt-get"][0], parameter_one)
 
@@ -122,7 +122,7 @@ class BuildProcessorTestCase(unittest.TestCase):
         self.assertEqual(self.data_two["volume"][0], "/om/scenarios")
 
     def test_parse_user(self):
-        self.assertEqual(self.data_one["user"][0], "apache")
+        self.assertEqual(self.data_one["user"][0], "root")
 
     def test_parse_workdir(self):
         self.assertEqual(self.data_two["workdir"][0], "/om")
