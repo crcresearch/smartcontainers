@@ -101,8 +101,13 @@ class scClient(docker.Client):
             raise
         else:
             response = [line for line in generator]
-
             final_line = response[len(response)-1]
+
+            # Handle strange case of two lines in generated last line
+            lines = final_line.split("\r\n")
+            if len(lines) > 1:
+                final_line = lines[1]
+
             fJson = json.loads(final_line)
             if "Successfully built" in fJson['stream']:
                 Id = fJson['stream'].split(' ')[2].strip()
