@@ -417,4 +417,4 @@ class DockerCli:
         Returns: TODO
 
         """
-        self.dcli.infect(image)
+        print("Result" + self.dcli.infect_image(image))
