@@ -106,7 +106,10 @@ class scClient(docker.Client):
             # Handle strange case of two lines in generated last line
             lines = final_line.split("\r\n")
             if len(lines) > 1:
-                final_line = lines[1]
+                if len(lines[0]) == 0:
+                    final_line = lines[1]
+                else:
+                    final_line = lines[0]
 
             fJson = json.loads(final_line)
             if "Successfully built" in fJson['stream']:
