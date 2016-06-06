@@ -267,9 +267,32 @@ class scClient(docker.Client):
         self.fileCopyIn(newContainer, self.provfilename, "/")
         # Remove local copy of provenance file
         os.remove(self.provfilename)
+
         # Commit the container changes
+        if 'path' in kwargs:
+            del kwargs['path']
+
+        tName = ""
+        if 'tag' in kwargs:
+            tName = kwargs['tag']
+            del kwargs['tag']
+
         newImage = super(scClient, self).commit(container=ContainerID, *args,
                                                 **kwargs)
+        # Update Tag
+        if tName is not "":
+            repository = ""
+            tag = ""
+
+            parts = tName.split(":")
+            repository = parts[0]
+            if len(parts) is 1:
+                tag = "latest"
+            else:
+                tag = parts[1]
+
+            super(scClient, self).tag(image=str(newImage['Id']).replace("sha256:", ""), repository=repository, tag=tag)
+
         # Stop container
         super(scClient, self).stop(ContainerID)
         super(scClient, self).remove_container(ContainerID)
